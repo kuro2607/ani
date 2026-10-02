@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌸 AniFlix Sakura — Anime, Movie & Song Corners</title>
+  
+  <meta name="description" content="AniFlix Sakura — Global Anime Streaming with Jikan API v4, multi-server embed gateways, SUB/DUB support, and real-time Tokyo broadcast schedules.">
+
+  <!-- Dynamic Favicon -->
+  <link id="site-favicon" rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <!-- HLS.js for direct fallback streams -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Zen+Maru+Gothic:wght@500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sakura: ['"Zen Maru Gothic"', 'sans-serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            theme: {
+              primary: '#f472b6',
+              glow: 'rgba(244, 114, 182, 0.45)',
+              accent: '#fb7185',
+              bg: '#080811',
+              surface: '#111222',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    :root {
+      --color-primary: #f472b6;
+      --color-glow: rgba(244, 114, 182, 0.45);
+      --color-accent: #fb7185;
+      --color-bg: #06070d;
+    }
+
+    body.mode-oled {
+      --color-bg: #000000 !important;
+      background-color: #000000 !important;
+    }
+
+    body.mode-oled header,
+    body.mode-oled nav,
+    body.mode-oled aside,
+    body.mode-oled section,
+    body.mode-oled .bg-slate-900,
+    body.mode-oled .bg-slate-950 {
+      background-color: #050508 !important;
+      border-color: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    body {
+      background-color: var(--color-bg);
+      color: #f1f5f9;
+      overflow-x: hidden;
+    }
+
+    #sakura-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      body.custom-cursor-enabled,
+      body.custom-cursor-enabled a,
+      body.custom-cursor-enabled button,
+      body.custom-cursor-enabled input,
+      body.custom-cursor-enabled select,
+      body.custom-cursor-enabled textarea,
+      body.custom-cursor-enabled [data-interactive="true"] {
+        cursor: none !important;
+      }
+    }
+
+    @media (hover: none) or (pointer: coarse) {
+      #desktop-cursor-root {
+        display: none !important;
+      }
+    }
+
+    #custom-cursor-pointer {
+      pointer-events: none;
+      position: fixed;
+      top: -100px;
+      left: -100px;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      width: 12px;
+      height: 12px;
+      background: radial-gradient(circle, #fda4af 0%, var(--color-primary) 100%);
+      border-radius: 60% 0% 60% 0%;
+      box-shadow: 0 0 12px var(--color-primary);
+    }
+
+    #custom-cursor-follower {
+      pointer-events: none;
+      position: fixed;
+      top: -100px;
+      left: -100px;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      width: 36px;
+      height: 36px;
+      border: 1.5px solid var(--color-primary);
+      border-radius: 50%;
+    }
+  </style>
+</head>
+
+<body class="font-sans min-h-screen flex flex-col antialiased selection:bg-pink-500 selection:text-white custom-cursor-enabled">
+
+  <canvas id="sakura-canvas"></canvas>
+
+  <div id="desktop-cursor-root">
+    <div id="custom-cursor-pointer"></div>
+    <div id="custom-cursor-follower"></div>
+  </div>
+
+  <div id="lights-curtain" class="fixed inset-0 bg-black opacity-0 pointer-events-none transition-opacity duration-500 z-40"></div>
+
+  <!-- Announcement Bar -->
+  <aside class="relative z-30 bg-slate-950/80 backdrop-blur-md border-b border-white/5 py-2 px-4 text-xs font-mono flex items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <span class="inline-flex items-center gap-1.5 text-pink-300 font-bold bg-pink-500/10 px-2.5 py-0.5 rounded-full border border-pink-500/30">
+        🌸 ANIFLIX SAKURA VERIFIED
+      </span>
+      <span class="text-slate-300 hidden sm:inline">Jikan API V4 & Universal Embed Relays Online.</span>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button 
+        onclick="toggleOledMode()" 
+        id="btn-oled-mode"
+        class="text-[11px] font-mono font-bold text-amber-300 bg-slate-900 border border-amber-500/30 hover:bg-amber-500/20 px-3 py-1 rounded-xl transition flex items-center gap-1.5"
+        data-interactive="true"
+      >
+        <i class="ph-bold ph-moon-stars"></i>
+        <span id="oled-mode-text">OLED Mode: Off</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Top Navigation Bar -->
+  <header class="sticky top-0 z-50 bg-[#080913]/90 backdrop-blur-xl border-b border-white/5 px-4 lg:px-8 py-3.5 transition-all duration-300">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3 select-none" data-interactive="true">
+        <button 
+          id="blossom-logo-btn" 
+          onclick="handleBlossomClick()" 
+          title="AniFlix Sakura" 
+          class="relative w-12 h-12 rounded-2xl bg-gradient-to-tr from-pink-500/20 via-rose-500/20 to-purple-500/20 border-2 border-pink-400/40 flex items-center justify-center text-2xl shadow-lg shadow-pink-500/20 hover:border-pink-300 transition-all duration-300 group"
+        >
+          <span class="text-2xl transition-transform duration-300 group-hover:scale-125">🌸</span>
+        </button>
+
+        <div onclick="scrollToTop()" class="cursor-pointer">
+          <span class="font-sakura text-2xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-rose-300 to-white font-black">
+            AniFlix<span class="text-pink-400">.Corner</span>
+          </span>
+          <span class="text-[10px] block font-mono text-pink-300/80 uppercase tracking-widest -mt-1 font-semibold">
+            Spring Blossom Sanctuary
+          </span>
+        </div>
+      </div>
+
+      <!-- Live Searchbar (Live Jikan MyAnimeList API Query) -->
+      <div class="flex-1 max-w-xl hidden md:block">
+        <div class="relative rounded-2xl flex items-center px-4 py-2.5 bg-slate-900/90 border border-white/10 shadow-inner focus-within:border-pink-400 transition-all">
+          <i class="ph-bold ph-magnifying-glass text-pink-400 text-lg mr-3"></i>
+          <input 
+            type="text" 
+            id="main-search-input" 
+            placeholder="Search thousands of animes (e.g. Solo Leveling, Demon Slayer, Naruto)..." 
+            class="bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none w-full font-medium"
+            oninput="handleSearchDebounced(this.value)"
+            data-interactive="true"
+          >
+          <span id="search-spinner" class="hidden text-pink-400 text-xs animate-spin ml-2"><i class="ph-bold ph-spinner"></i></span>
+        </div>
+      </div>
+
+      <!-- Header Action Buttons -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <button 
+          onclick="openScheduleModal()" 
+          title="Tokyo Broadcast Timetable" 
+          class="p-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-300 hover:text-pink-300 hover:bg-slate-800 transition shadow-sm flex items-center gap-1.5 text-xs font-mono font-bold"
+          data-interactive="true"
+        >
+          <i class="ph-bold ph-calendar text-lg text-pink-400"></i>
+          <span class="hidden sm:inline">Schedule</span>
+        </button>
+
+        <button 
+          onclick="openHistoryModal()" 
+          title="Your Watch History" 
+          class="p-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-300 hover:text-pink-300 hover:bg-slate-800 transition shadow-sm flex items-center gap-1.5 text-xs font-mono font-bold"
+          data-interactive="true"
+        >
+          <i class="ph-bold ph-clock-counter-clockwise text-lg text-pink-400"></i>
+          <span class="hidden sm:inline">History</span>
+        </button>
+
+        <!-- User Authentication Widget -->
+        <div id="user-nav-container"></div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Categories: Corners Navigation -->
+  <nav class="relative z-30 bg-slate-950/70 backdrop-blur-md border-b border-white/5 px-4 lg:px-8 py-2.5 overflow-x-auto select-none">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      <div class="flex items-center gap-2 text-xs font-semibold whitespace-nowrap" id="corner-pills">
+        <button onclick="filterCorner('All')" class="corner-pill active px-4 py-1.5 rounded-xl bg-pink-500 text-white shadow-md shadow-pink-500/30 font-medium tracking-wide flex items-center gap-1.5" data-interactive="true">
+          ✨ All Anime
+        </button>
+        <button onclick="filterCorner('Airing')" class="corner-pill px-4 py-1.5 rounded-xl bg-slate-900/90 text-slate-300 hover:text-pink-300 border border-white/10 transition font-medium tracking-wide flex items-center gap-1.5" data-interactive="true">
+          📺 Airing Now
+        </button>
+        <button onclick="filterCorner('Top Rated')" class="corner-pill px-4 py-1.5 rounded-xl bg-slate-900/90 text-slate-300 hover:text-pink-300 border border-white/10 transition font-medium tracking-wide flex items-center gap-1.5" data-interactive="true">
+          👑 Top Rated
+        </button>
+      </div>
+
+      <div class="hidden lg:flex items-center gap-2 text-xs font-mono text-pink-300 font-semibold">
+        <span class="w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span>
+        <span>Jikan V4 & Universal Embed Relays Online</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="relative z-20 flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 space-y-10 transition-all duration-300" id="main-content-layout">
+
+    <!-- HERO THEATER SCREEN -->
+    <section id="cinema-theater-section" class="relative z-40 transition-all duration-500">
+      
+      <div id="ambient-glow" class="absolute -inset-4 bg-gradient-to-r from-pink-500/25 via-rose-500/20 to-purple-600/25 blur-3xl opacity-60 -z-10 rounded-3xl pointer-events-none transition-all duration-700"></div>
+
+      <!-- STREAM SERVER SELECTOR & SUB/DUB CONTROLS -->
+      <div class="bg-slate-950/90 border border-white/10 px-4 py-3 rounded-2xl mb-3 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+        <div class="flex items-center gap-3 flex-wrap">
+          
+          <!-- SUB / DUB Toggle -->
+          <div class="inline-flex rounded-xl bg-slate-900 p-1 border border-white/10">
+            <button 
+              id="sub-mode-btn" 
+              onclick="toggleSubDub('SUB')" 
+              class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1 bg-pink-500 text-white shadow-sm"
+              data-interactive="true"
+            >
+              <i class="ph-bold ph-subtitles text-sm"></i> SUB
+            </button>
+            <button 
+              id="dub-mode-btn" 
+              onclick="toggleSubDub('DUB')" 
+              class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1 text-slate-400 hover:text-white"
+              data-interactive="true"
+            >
+              <i class="ph-bold ph-microphone-stage text-sm"></i> DUB
+            </button>
+          </div>
+
+          <span class="text-xs font-mono font-bold text-pink-400 flex items-center gap-1.5 ml-1">
+            <i class="ph-bold ph-hard-drives text-base"></i> STREAM SOURCE:
+          </span>
+          <div id="server-buttons-list" class="flex items-center gap-2 flex-wrap"></div>
+        </div>
+
+        <div class="flex items-center gap-2.5 text-xs font-mono text-slate-400 flex-wrap">
+          <button 
+            onclick="toggleExpandedTheater()" 
+            id="btn-theater-expand"
+            class="p-1.5 rounded-xl bg-slate-900 border border-white/10 hover:text-pink-400 transition text-sm" 
+            title="Expand / Contract Player Container"
+            data-interactive="true"
+          >
+            <i class="ph-bold ph-arrows-out-line-horizontal" id="theater-expand-icon"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- UNIVERSAL EMBED VIDEO PLAYER STAGE -->
+      <div class="bg-slate-950/90 border-2 border-white/10 rounded-3xl overflow-hidden shadow-2xl relative">
+        <div class="relative bg-black aspect-video max-h-[620px] w-full flex items-center justify-center overflow-hidden">
+          
+          <!-- Universal Streaming Iframe (VidSrc, 2Embed, AutoEmbed) -->
+          <iframe 
+            id="embed-video-player" 
+            class="w-full h-full border-0" 
+            allowfullscreen 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          ></iframe>
+
+          <!-- Loading Indicator -->
+          <div id="video-loading-screen" class="absolute inset-0 bg-black/85 backdrop-blur-md hidden flex-col items-center justify-center gap-4 z-30 pointer-events-none">
+            <div class="w-16 h-16 rounded-full border-2 border-dashed border-pink-400 animate-spin flex items-center justify-center bg-pink-500/10 shadow-[0_0_20px_rgba(244,114,182,0.3)]">
+              <span class="text-3xl">🌸</span>
+            </div>
+            <div class="text-center space-y-1">
+              <span class="text-base font-sakura font-bold tracking-wider text-pink-300 block animate-pulse">
+                SYNCING UNIVERSAL EMBED STREAM...
+              </span>
+              <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest">
+                Negotiating VidSrc & 2Embed Gateways
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Series / Movie Info Header Banner -->
+        <div class="p-6 lg:p-8 bg-slate-900/90 border-t border-white/5 space-y-5">
+          <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+            
+            <div class="flex items-start gap-4">
+              <img 
+                id="player-series-cover" 
+                src="https://cdn.myanimelist.net/images/anime/1188/136926l.jpg" 
+                alt="Show Cover" 
+                class="w-20 h-28 sm:w-24 sm:h-36 object-cover rounded-2xl border border-white/10 shadow-lg shrink-0"
+              >
+
+              <div class="space-y-1.5">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span id="player-badge-corner" class="px-3 py-0.5 rounded-full text-xs font-sakura font-bold bg-pink-500 text-white border border-pink-400">
+                    ANIME CORNER
+                  </span>
+                  <span id="player-badge-type" class="px-2 py-0.5 rounded-md text-[10px] font-mono text-pink-300 bg-pink-500/10 border border-pink-500/30 font-bold">
+                    SUB: EP 1
+                  </span>
+                  <span class="px-2 py-0.5 rounded-md text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 font-bold">
+                    1080P ULTRA HD
+                  </span>
+                  <span id="player-views" class="text-xs text-slate-400 font-mono flex items-center gap-1">
+                    <i class="ph-fill ph-eye text-pink-400"></i> 420k views
+                  </span>
+                </div>
+                <h1 id="player-title" class="text-xl sm:text-2xl font-sakura font-bold text-white tracking-wide">
+                  Solo Leveling
+                </h1>
+                <p class="text-xs text-pink-400 font-mono font-semibold" id="player-active-episode-title">
+                  Now Playing: Episode 1
+                </p>
+                <p class="text-xs text-slate-400 font-mono">
+                  Studio: <span id="player-creator" class="text-slate-300 font-semibold">A-1 Pictures</span>
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2.5 flex-wrap self-end md:self-auto">
+              <button 
+                id="btn-like-active" 
+                onclick="likeCurrentVideo()" 
+                class="px-4 py-2 rounded-xl bg-slate-950 border border-white/10 text-xs font-bold text-pink-400 flex items-center gap-2 hover:bg-pink-500 hover:text-white transition"
+                data-interactive="true"
+              >
+                <i class="ph-fill ph-heart" id="like-icon-active"></i>
+                <span id="like-count-active">35.2k</span>
+              </button>
+
+              <button 
+                onclick="copyShareUrl()" 
+                class="px-4 py-2 rounded-xl bg-slate-950 border border-white/10 text-xs font-semibold text-slate-200 flex items-center gap-2 hover:border-pink-400 transition"
+                data-interactive="true"
+              >
+                <i class="ph-bold ph-share-network"></i>
+                <span>Share</span>
+              </button>
+            </div>
+
+          </div>
+
+          <p id="player-description" class="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-4xl pt-2 border-t border-white/5">
+            Loading anime synopsis and premise...
+          </p>
+
+          <!-- EPISODE SELECTOR SECTION -->
+          <div class="pt-4 border-t border-white/5 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-sakura font-bold text-white flex items-center gap-2">
+                <i class="ph-bold ph-list-numbers text-pink-400 text-base"></i>
+                <span>SELECT EPISODE</span>
+                <span id="episode-total-count" class="text-[10px] font-mono bg-pink-500/20 text-pink-300 px-2 py-0.5 rounded-full font-bold">
+                  12 Episodes Available
+                </span>
+              </span>
+              <span class="text-[11px] font-mono text-slate-500">Click to switch episode stream instantly</span>
+            </div>
+
+            <div id="episodes-list-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 max-h-[300px] overflow-y-auto pr-1"></div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ANIME CATALOG GRID -->
+    <section class="space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+        <div>
+          <h2 class="text-2xl font-sakura font-bold text-white flex items-center gap-2">
+            <span>🌸</span> <span id="catalog-section-title">ALL AVAILABLE ANIME SERIES</span>
+          </h2>
+          <p class="text-xs text-slate-400">Select any series to inspect all episodes, SUB/DUB streams, and covers</p>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs font-mono font-bold">
+          <span class="text-slate-500">Order by:</span>
+          <button onclick="sortVideos('popular')" class="px-3 py-1 rounded-lg bg-pink-500/20 text-pink-300 border border-pink-500/40 hover:bg-pink-500 hover:text-white transition" data-interactive="true">Most Popular</button>
+          <button onclick="sortVideos('latest')" class="px-3 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white transition" data-interactive="true">Newest</button>
+        </div>
+      </div>
+
+      <div id="video-catalog-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+    </section>
+
+    <!-- COMMUNITY DISCUSSION CORNER -->
+    <section class="bg-slate-900/80 border border-white/10 rounded-3xl p-6 lg:p-8 space-y-6">
+      <div class="flex items-center justify-between">
+        <h3 class="text-xl font-sakura font-bold text-white flex items-center gap-2">
+          <i class="ph-bold ph-chat-centered-text text-pink-400"></i>
+          <span>CORNER COMMUNITY CHAT</span>
+          <span id="comment-count-badge" class="text-xs font-mono px-2.5 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-bold">2 comments</span>
+        </h3>
+        <span class="text-xs text-pink-300/80 font-mono font-bold">🌸 Media Discussion Lounge</span>
+      </div>
+
+      <div class="flex gap-3">
+        <div id="comment-avatar-preview" class="w-10 h-10 rounded-full bg-gradient-to-tr from-pink-500 to-rose-600 flex items-center justify-center font-bold text-white shrink-0 text-base">
+          🌸
+        </div>
+        <div class="flex-1 space-y-2">
+          <div class="flex items-center justify-between">
+            <span id="commenting-as-label" class="text-xs font-mono text-slate-400">
+              Posting as: <strong class="text-slate-400">Guest</strong> (<a href="javascript:void(0)" onclick="openAuthModal()" class="text-pink-400 underline">Sign in</a> to save comments)
+            </span>
+          </div>
+          <div class="flex gap-2">
+            <textarea 
+              id="comment-text-input" 
+              rows="2" 
+              placeholder="Share thoughts on this episode..." 
+              class="flex-1 bg-slate-950 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-slate-500 outline-none focus:border-pink-400 resize-none font-sans"
+              data-interactive="true"
+            ></textarea>
+            <button 
+              onclick="postComment()" 
+              class="px-6 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500 text-white font-sakura font-bold text-sm transition flex items-center justify-center gap-1.5 self-end py-3 shadow-lg shadow-pink-500/30"
+              data-interactive="true"
+            >
+              <span>Post</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="comments-list" class="space-y-4 pt-4 border-t border-white/5"></div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: USER SIGN IN / REGISTER -->
+  <div id="auth-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-white/10 w-full max-w-sm rounded-3xl shadow-2xl p-6 sm:p-7 space-y-5">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🌸</span>
+          <h3 class="text-lg font-sakura font-bold text-white">User Account</h3>
+        </div>
+        <button onclick="closeAuthModal()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center" data-interactive="true">
+          <i class="ph-bold ph-x"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-left text-xs">
+        <div>
+          <label class="block font-mono text-slate-400 mb-1">Nickname / Display Name *</label>
+          <input 
+            type="text" 
+            id="auth-username-input" 
+            placeholder="e.g. AnimeSenpai" 
+            class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:border-pink-400 outline-none"
+            data-interactive="true"
+          >
+        </div>
+
+        <div>
+          <label class="block font-mono text-slate-400 mb-1">Email Address</label>
+          <input 
+            type="email" 
+            id="auth-email-input" 
+            placeholder="you@domain.com" 
+            class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:border-pink-400 outline-none"
+            data-interactive="true"
+          >
+        </div>
+
+        <div>
+          <label class="block font-mono text-slate-400 mb-1">Password</label>
+          <input 
+            type="password" 
+            id="auth-password-input" 
+            placeholder="••••••••" 
+            class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:border-pink-400 outline-none"
+            data-interactive="true"
+          >
+        </div>
+
+        <button 
+          onclick="handleAuthSubmit()" 
+          class="w-full py-2.5 rounded-xl bg-pink-500 hover:bg-pink-400 text-white font-sakura font-bold text-sm shadow-lg shadow-pink-500/30 transition mt-2"
+          data-interactive="true"
+        >
+          Save & Sign In
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: USER WATCH HISTORY -->
+  <div id="history-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-white/10 w-full max-w-xl rounded-3xl shadow-2xl p-6 sm:p-7 space-y-5 max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-pink-500/20 text-pink-400 flex items-center justify-center text-lg">
+            <i class="ph-bold ph-clock-counter-clockwise"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-sakura font-bold text-white">Your Watch History</h3>
+            <p class="text-[11px] text-slate-400">Everything you recently watched on AniFlix</p>
+          </div>
+        </div>
+        <button onclick="closeHistoryModal()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center" data-interactive="true">
+          <i class="ph-bold ph-x"></i>
+        </button>
+      </div>
+
+      <div id="history-list-container" class="flex-1 overflow-y-auto space-y-2.5 pr-1 text-xs"></div>
+
+      <div class="flex items-center justify-between pt-3 border-t border-white/10 text-xs">
+        <button onclick="clearWatchHistory()" class="text-rose-400 hover:text-white font-mono transition" data-interactive="true">
+          Clear History
+        </button>
+        <button onclick="closeHistoryModal()" class="px-5 py-2 rounded-xl bg-slate-800 text-slate-200 font-bold hover:bg-slate-700 transition" data-interactive="true">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: TOKYO BROADCAST SCHEDULE -->
+  <div id="schedule-modal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-white/10 w-full max-w-3xl rounded-3xl p-6 space-y-4 max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-pink-500/20 text-pink-400 flex items-center justify-center text-lg">
+            <i class="ph-bold ph-calendar"></i>
+          </div>
+          <h3 class="text-base font-sakura font-bold text-white">Tokyo Broadcast Timetable (JST)</h3>
+        </div>
+        <button onclick="closeScheduleModal()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center" data-interactive="true">
+          <i class="ph-bold ph-x"></i>
+        </button>
+      </div>
+
+      <div id="schedule-items-container" class="flex-1 overflow-y-auto space-y-2 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- STEALTH ADMIN MODAL (CTRL + SHIFT + K) -->
+  <div id="stealth-admin-modal" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-lg hidden items-center justify-center p-4">
+    <div class="bg-slate-950 border border-pink-500/30 w-full max-w-sm rounded-3xl shadow-2xl p-6 sm:p-7 space-y-4 text-center">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-pink-500 to-rose-600 flex items-center justify-center text-white text-xl mx-auto shadow-lg shadow-pink-500/30">
+        🔐
+      </div>
+      <div>
+        <h3 class="text-base font-sakura font-bold text-white tracking-wide">Stealth Security Vault</h3>
+        <p class="text-[11px] text-slate-400 mt-1">Authorized master administrator access only.</p>
+      </div>
+
+      <div class="space-y-3 text-left">
+        <div>
+          <label class="block text-[11px] font-mono text-slate-400 mb-1">Master Keypass</label>
+          <input 
+            type="password" 
+            id="stealth-admin-pass" 
+            placeholder="••••••••••••" 
+            class="w-full bg-slate-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-pink-400 outline-none font-mono"
+            onkeydown="if(event.key==='Enter') verifyStealthAdmin()"
+            data-interactive="true"
+          >
+        </div>
+
+        <div class="flex items-center gap-2 pt-2">
+          <button onclick="closeStealthAdminModal()" class="flex-1 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs" data-interactive="true">Cancel</button>
+          <button onclick="verifyStealthAdmin()" class="flex-1 py-2 rounded-xl bg-pink-500 hover:bg-pink-400 text-white font-sakura font-bold text-xs shadow-lg transition" data-interactive="true">
+            Unlock Vault
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast-msg" class="fixed bottom-6 right-6 bg-slate-900 border-2 border-pink-400 text-white px-5 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-3 transform translate-y-24 opacity-0 transition-all duration-300 z-50">
+    <div class="w-7 h-7 rounded-full bg-pink-500 text-white flex items-center justify-center text-sm">
+      🌸
+    </div>
+    <span id="toast-text" class="font-mono text-pink-200">Notification</span>
+  </div>
+
+  <script>
+    // ==========================================================
+    // 1. EXTENSIVE SEED CATALOG WITH REAL MAL IDS
+    // ==========================================================
+    let catalog = [
+      {
+        id: 'mal-52299',
+        mal_id: 52299,
+        title: 'Solo Leveling (Ore dake Level Up na Ken)',
+        category: 'Airing',
+        author: 'A-1 Pictures',
+        views: '420,100',
+        coverPhoto: 'https://cdn.myanimelist.net/images/anime/1188/136926l.jpg',
+        likes: 35200,
+        isLiked: false,
+        desc: 'They say whatever doesn’t kill you makes you stronger, but that’s not the case for the world’s weakest hunter, Sung Jinwoo.',
+        episodes: generateUniversalEpisodes(52299, 12, 'https://cdn.myanimelist.net/images/anime/1188/136926l.jpg')
+      },
+      {
+        id: 'mal-52034',
+        mal_id: 52034,
+        title: 'Frieren: Beyond Journey\'s End',
+        category: 'Top Rated',
+        author: 'Madhouse',
+        views: '610,200',
+        coverPhoto: 'https://cdn.myanimelist.net/images/anime/1015/138075l.jpg',
+        likes: 54100,
+        isLiked: false,
+        desc: 'The demon king has been defeated, and the victorious hero party returns home before disbanding.',
+        episodes: generateUniversalEpisodes(52034, 28, 'https://cdn.myanimelist.net/images/anime/1015/138075l.jpg')
+      },
+      {
+        id: 'mal-51009',
+        mal_id: 51009,
+        title: 'Jujutsu Kaisen Season 2',
+        category: 'Airing',
+        author: 'MAPPA',
+        views: '780,400',
+        coverPhoto: 'https://cdn.myanimelist.net/images/anime/1792/138022l.jpg',
+        likes: 67300,
+        isLiked: false,
+        desc: 'The Shibuya Incident begins as cursed spirits and curse users gather on October 31st to trap Gojo Satoru.',
+        episodes: generateUniversalEpisodes(51009, 23, 'https://cdn.myanimelist.net/images/anime/1792/138022l.jpg')
+      },
+      {
+        id: 'mal-47778',
+        mal_id: 47778,
+        title: 'Demon Slayer: Kimetsu no Yaiba',
+        category: 'Top Rated',
+        author: 'ufotable',
+        views: '920,800',
+        coverPhoto: 'https://cdn.myanimelist.net/images/anime/1286/99889l.jpg',
+        likes: 89400,
+        isLiked: false,
+        desc: 'A young boy whose family is slaughtered by a demon begins a quest to turn his demon sister human again.',
+        episodes: generateUniversalEpisodes(47778, 26, 'https://cdn.myanimelist.net/images/anime/1286/99889l.jpg')
+      },
+      {
+        id: 'mal-21',
+        mal_id: 21,
+        title: 'One Piece',
+        category: 'Airing',
+        author: 'Toei Animation',
+        views: '1,420,000',
+        coverPhoto: 'https://cdn.myanimelist.net/images/anime/6/73245l.jpg',
+        likes: 120000,
+        isLiked: false,
+        desc: 'Monkey D. Luffy sets sail with his eccentric crew to find the legendary treasure known as the One Piece.',
+        episodes: generateUniversalEpisodes(21, 30, 'https://cdn.myanimelist.net/images/anime/6/73245l.jpg')
+      },
+      {
+        id: 'mal-41467',
+        mal_id: 41467,
+        title: 'Bleach: Thousand-Year Blood War',
+        category: 'Airing',
+        author: 'Pierrot',
+        views: '512,000',
+        coverPhoto: 'https://cdn.myanimelist.net/images/anime/1764/126627l.jpg',
+        likes: 41000,
+        isLiked: false,
+        desc: 'The peace is broken when warning sirens blare through Soul Society as residents disappear without a trace.',
+        episodes: generateUniversalEpisodes(41467, 13, 'https://cdn.myanimelist.net/images/anime/1764/126627l.jpg')
+      },
+      {
+        id: 'mal-16498',
+        mal_id: 16498,
+        title: 'Attack on Titan (Shingeki no Kyojin)',
+        category: 'Top Rated',
+        author: 'Wit Studio',
+        views: '1,200,000',
+        coverPhoto: 'https://cdn.myanimelist.net/images/anime/10/47347l.jpg',
+        likes: 98000,
+        isLiked: false,
+        desc: 'After his hometown is destroyed and his mother is killed, young Eren Jaeger vows to cleanse the earth of Titans.',
+        episodes: generateUniversalEpisodes(16498, 25, 'https://cdn.myanimelist.net/images/anime/10/47347l.jpg')
+      },
+      {
+        id: 'mal-44511',
+        mal_id: 44511,
+        title: 'Chainsaw Man',
+        category: 'Airing',
+        author: 'MAPPA',
+        views: '650,000',
+        coverPhoto: 'https://cdn.myanimelist.net/images/anime/1806/126216l.jpg',
+        likes: 59000,
+        isLiked: false,
+        desc: 'Denji is a teenage boy living with a Chainsaw Devil named Pochita until he is betrayed and reborn as a devil.',
+        episodes: generateUniversalEpisodes(44511, 12, 'https://cdn.myanimelist.net/images/anime/1806/126216l.jpg')
+      }
+    ];
+
+    /**
+     * Constructs true Aniwave / Anikoto multi-server gateways per MAL anime ID and episode number
+     */
+    function generateUniversalEpisodes(malId, count, poster) {
+      const eps = [];
+      const episodeCount = count > 0 ? count : 12;
+
+      for (let i = 1; i <= episodeCount; i++) {
+        // Universal Streaming Embed Gateways
+        const vidsrcSub = `https://vidsrc.cc/v2/embed/anime/${malId}/${i}/sub`;
+        const vidsrcDub = `https://vidsrc.cc/v2/embed/anime/${malId}/${i}/dub`;
+        const autoEmbedSub = `https://player.autoembed.cc/embed/anime/${malId}/${i}`;
+        const autoEmbedDub = `https://player.autoembed.cc/embed/anime/${malId}/${i}?dub=1`;
+        const twoEmbedSub = `https://2embed.cc/embed/anime/${malId}/${i}`;
+
+        eps.push({
+          epNum: i,
+          title: `Episode ${i}`,
+          duration: '24:00',
+          thumbnail: poster,
+          subServers: [
+            { name: 'VidSrc (Server 1)', url: vidsrcSub },
+            { name: 'AutoEmbed (Server 2)', url: autoEmbedSub },
+            { name: '2Embed (Server 3)', url: twoEmbedSub }
+          ],
+          dubServers: [
+            { name: 'VidSrc DUB', url: vidsrcDub },
+            { name: 'AutoEmbed DUB', url: autoEmbedDub }
+          ]
+        });
+      }
+      return eps;
+    }
+
+    let currentSeriesId = 'mal-52299';
+    let currentEpisodeIdx = 0;
+    let currentServerList = [];
+    let activeServerIdx = 0;
+    let currentAudioMode = 'SUB';
+    let currentCorner = 'All';
+    let isLightsOff = false;
+    let isTheaterExpanded = false;
+
+    const embedIframe = document.getElementById('embed-video-player');
+
+    // ==========================================================
+    // 2. USER AUTHENTICATION & LOGIN ENGINE
+    // ==========================================================
+    let currentUser = null;
+
+    function initUserSession() {
+      const stored = localStorage.getItem('aniflix_user');
+      if (stored) {
+        try { currentUser = JSON.parse(stored); } catch(e) { currentUser = null; }
+      }
+      updateAuthUI();
+    }
+
+    function updateAuthUI() {
+      const container = document.getElementById('user-nav-container');
+      const commentAvatar = document.getElementById('comment-avatar-preview');
+      const commentingAsLabel = document.getElementById('commenting-as-label');
+      if (!container) return;
+
+      if (currentUser && currentUser.username) {
+        const firstLetter = currentUser.username.charAt(0).toUpperCase();
+        container.innerHTML = `
+          <div class="flex items-center gap-2 bg-slate-900 border border-white/10 px-2.5 py-1.5 rounded-xl">
+            <div class="w-6 h-6 rounded-lg bg-pink-500 text-white font-bold flex items-center justify-center text-xs">
+              ${firstLetter}
+            </div>
+            <span class="text-xs font-mono text-pink-300 font-bold hidden sm:inline max-w-[90px] truncate">
+              ${currentUser.username}
+            </span>
+            <button onclick="logoutUser()" title="Sign Out" class="text-slate-400 hover:text-rose-400 text-sm ml-1" data-interactive="true">
+              <i class="ph-bold ph-sign-out"></i>
+            </button>
+          </div>
+        `;
+        if (commentAvatar) commentAvatar.textContent = firstLetter;
+        if (commentingAsLabel) commentingAsLabel.innerHTML = `Posting as: <strong class="text-pink-300">${currentUser.username}</strong>`;
+      } else {
+        container.innerHTML = `
+          <button 
+            onclick="openAuthModal()" 
+            class="px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-pink-300 hover:text-white hover:bg-slate-800 transition shadow-sm text-xs font-mono font-bold flex items-center gap-1.5"
+            data-interactive="true"
+          >
+            <i class="ph-bold ph-user-circle text-base"></i>
+            <span>Sign In</span>
+          </button>
+        `;
+        if (commentAvatar) commentAvatar.textContent = '🌸';
+        if (commentingAsLabel) commentingAsLabel.innerHTML = `Posting as: <strong class="text-slate-400">Guest</strong> (<a href="javascript:void(0)" onclick="openAuthModal()" class="text-pink-400 underline">Sign in</a> to save comments)`;
+      }
+      bindInteractiveCursorListeners();
+    }
+
+    function openAuthModal() {
+      document.getElementById('auth-modal').classList.remove('hidden');
+      document.getElementById('auth-modal').classList.add('flex');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('auth-modal').classList.add('hidden');
+      document.getElementById('auth-modal').classList.remove('flex');
+    }
+
+    function handleAuthSubmit() {
+      const username = document.getElementById('auth-username-input').value.trim();
+      const email = document.getElementById('auth-email-input').value.trim();
+      if (!username) {
+        showToast("Please enter a nickname!");
+        return;
+      }
+
+      currentUser = { username, email, joinedAt: new Date().toLocaleDateString() };
+      localStorage.setItem('aniflix_user', JSON.stringify(currentUser));
+      updateAuthUI();
+      closeAuthModal();
+      showToast(`🌸 Welcome to AniFlix, ${username}!`);
+    }
+
+    function logoutUser() {
+      localStorage.removeItem('aniflix_user');
+      currentUser = null;
+      updateAuthUI();
+      showToast("Signed out of your account.");
+    }
+
+    // ==========================================================
+    // 3. SUB/DUB & UNIVERSAL EMBED STREAM ENGINE
+    // ==========================================================
+    function loadSeries(seriesId, episodeIndex = 0) {
+      const show = catalog.find(s => s.id === seriesId);
+      if (!show || !show.episodes || show.episodes.length === 0) return;
+
+      currentSeriesId = seriesId;
+      currentEpisodeIdx = episodeIndex;
+
+      document.getElementById('player-title').textContent = show.title;
+      document.getElementById('player-series-cover').src = show.coverPhoto;
+      document.getElementById('player-creator').textContent = show.author || 'Studio';
+      document.getElementById('player-description').textContent = show.desc || 'No synopsis provided.';
+      document.getElementById('player-badge-corner').textContent = (show.category || 'ANIME').toUpperCase();
+      document.getElementById('player-views').innerHTML = `<i class="ph-fill ph-eye text-pink-400"></i> ${show.views || '350k'} views`;
+      document.getElementById('like-count-active').textContent = show.likes || 12000;
+      document.getElementById('episode-total-count').textContent = `${show.episodes.length} Episodes Available`;
+
+      renderEpisodes(show);
+      playEpisode(episodeIndex);
+      renderCatalog();
+    }
+
+    function toggleSubDub(mode) {
+      currentAudioMode = mode;
+      const subBtn = document.getElementById('sub-mode-btn');
+      const dubBtn = document.getElementById('dub-mode-btn');
+
+      if (mode === 'SUB') {
+        subBtn.className = "px-3 py-1 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1 bg-pink-500 text-white shadow-sm";
+        dubBtn.className = "px-3 py-1 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1 text-slate-400 hover:text-white";
+      } else {
+        dubBtn.className = "px-3 py-1 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1 bg-pink-500 text-white shadow-sm";
+        subBtn.className = "px-3 py-1 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1 text-slate-400 hover:text-white";
+      }
+
+      showToast(`Switched to ${mode} audio`);
+      playEpisode(currentEpisodeIdx);
+    }
+
+    function renderEpisodes(show) {
+      const container = document.getElementById('episodes-list-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      show.episodes.forEach((ep, idx) => {
+        const isCurrent = idx === currentEpisodeIdx;
+        const card = document.createElement('div');
+        card.className = `p-2 rounded-xl border transition cursor-pointer flex flex-col justify-between ${
+          isCurrent 
+            ? 'bg-pink-500/20 border-pink-400 shadow-md shadow-pink-500/20' 
+            : 'bg-slate-950 border-white/10 hover:border-pink-500/50'
+        }`;
+        card.setAttribute('data-interactive', 'true');
+        card.onclick = () => playEpisode(idx);
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between w-full">
+            <span class="text-[10px] font-mono font-bold text-pink-300">EP ${ep.epNum}</span>
+            <i class="ph-fill ${isCurrent ? 'ph-waveform text-pink-400' : 'ph-play text-slate-500'} text-xs"></i>
+          </div>
+          <span class="text-xs font-semibold text-white truncate mt-1">Episode ${ep.epNum}</span>
+        `;
+        container.appendChild(card);
+      });
+      bindInteractiveCursorListeners();
+    }
+
+    function playEpisode(epIndex) {
+      const show = catalog.find(s => s.id === currentSeriesId);
+      if (!show || !show.episodes[epIndex]) return;
+
+      currentEpisodeIdx = epIndex;
+      const episode = show.episodes[epIndex];
+      document.getElementById('player-active-episode-title').textContent = `Now Playing: Episode ${episode.epNum}`;
+      document.getElementById('player-badge-type').textContent = `${currentAudioMode}: EP ${episode.epNum}`;
+
+      // Select SUB or DUB gateways
+      if (currentAudioMode === 'DUB' && episode.dubServers && episode.dubServers.length > 0) {
+        currentServerList = episode.dubServers;
+      } else {
+        currentServerList = episode.subServers || [];
+      }
+
+      activeServerIdx = 0;
+      recordWatchHistory(show, episode);
+      renderEpisodes(show);
+      renderServerButtons();
+      switchStreamServer(0);
+    }
+
+    function renderServerButtons() {
+      const container = document.getElementById('server-buttons-list');
+      if (!container) return;
+      container.innerHTML = '';
+
+      currentServerList.forEach((src, idx) => {
+        const isSelected = idx === activeServerIdx;
+        const btn = document.createElement('button');
+        btn.className = `px-3 py-1 rounded-xl text-xs font-mono font-bold transition flex items-center gap-1.5 ${
+          isSelected 
+            ? 'bg-pink-500 text-white shadow-md shadow-pink-500/30' 
+            : 'bg-slate-900 text-slate-300 hover:text-white border border-white/10'
+        }`;
+        btn.setAttribute('data-interactive', 'true');
+        btn.innerHTML = `<span class="w-2 h-2 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-400'}"></span> ${src.name}`;
+        btn.onclick = () => switchStreamServer(idx);
+        container.appendChild(btn);
+      });
+      bindInteractiveCursorListeners();
+    }
+
+    function switchStreamServer(idx) {
+      if (!currentServerList || idx < 0 || idx >= currentServerList.length) return;
+      activeServerIdx = idx;
+      const item = currentServerList[activeServerIdx];
+      const url = item.url;
+
+      renderServerButtons();
+      showBufferLoading(true);
+
+      // Load universal streaming gateway into iframe
+      embedIframe.src = url;
+
+      embedIframe.onload = () => {
+        showBufferLoading(false);
+      };
+      setTimeout(() => showBufferLoading(false), 2000);
+    }
+
+    function showBufferLoading(visible) {
+      const screen = document.getElementById('video-loading-screen');
+      if (visible) {
+        screen.classList.remove('hidden');
+        screen.classList.add('flex');
+      } else {
+        screen.classList.add('hidden');
+        screen.classList.remove('flex');
+      }
+    }
+
+    // ==========================================================
+    // 4. JIKAN REST API V4 (ZERO CORS, SEARCHES ALL ANIMES)
+    // ==========================================================
+    let searchDebounceTimer = null;
+
+    function handleSearchDebounced(query) {
+      clearTimeout(searchDebounceTimer);
+      const spinner = document.getElementById('search-spinner');
+
+      if (!query || query.trim().length === 0) {
+        renderCatalog();
+        return;
+      }
+
+      if (spinner) spinner.classList.remove('hidden');
+
+      searchDebounceTimer = setTimeout(async () => {
+        try {
+          const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=15`);
+          const data = await res.json();
+          if (data && data.data && data.data.length > 0) {
+            const results = data.data.map(item => {
+              const poster = item.images.jpg.large_image_url || item.images.jpg.image_url;
+              const totalEps = item.episodes || 12;
+              return {
+                id: 'mal-' + item.mal_id,
+                mal_id: item.mal_id,
+                title: item.title_english || item.title,
+                category: item.airing ? 'Airing' : 'Top Rated',
+                author: item.studios && item.studios[0] ? item.studios[0].name : 'Studio',
+                views: `${Math.floor(Math.random() * 300 + 50)}k`,
+                coverPhoto: poster,
+                likes: 12500,
+                isLiked: false,
+                desc: item.synopsis || 'Anime series synopsis.',
+                episodes: generateUniversalEpisodes(item.mal_id, totalEps, poster)
+              };
+            });
+
+            // Merge search results into the current catalog
+            results.forEach(r => {
+              if (!catalog.find(c => c.id === r.id)) catalog.push(r);
+            });
+            renderCatalog(results);
+          }
+        } catch (e) {
+          const filtered = catalog.filter(s => s.title.toLowerCase().includes(query.toLowerCase()));
+          renderCatalog(filtered);
+        }
+        if (spinner) spinner.classList.add('hidden');
+      }, 400);
+    }
+
+    // ==========================================================
+    // 5. WATCH HISTORY & COMMENTS SYSTEM
+    // ==========================================================
+    function getWatchHistory() {
+      try { return JSON.parse(localStorage.getItem('aniflix_history')) || []; } catch(e) { return []; }
+    }
+
+    function recordWatchHistory(series, episode) {
+      let history = getWatchHistory();
+      history = history.filter(item => !(item.seriesId === series.id && item.epNum === episode.epNum));
+
+      history.unshift({
+        seriesId: series.id,
+        seriesTitle: series.title,
+        coverPhoto: series.coverPhoto,
+        category: series.category,
+        epNum: episode.epNum,
+        epTitle: episode.title,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+
+      if (history.length > 25) history.pop();
+      localStorage.setItem('aniflix_history', JSON.stringify(history));
+    }
+
+    function openHistoryModal() {
+      renderWatchHistory();
+      document.getElementById('history-modal').classList.remove('hidden');
+      document.getElementById('history-modal').classList.add('flex');
+    }
+
+    function closeHistoryModal() {
+      document.getElementById('history-modal').classList.add('hidden');
+      document.getElementById('history-modal').classList.remove('flex');
+    }
+
+    function renderWatchHistory() {
+      const container = document.getElementById('history-list-container');
+      const history = getWatchHistory();
+      if (!container) return;
+
+      if (history.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-10 space-y-2 text-slate-400">
+            <span class="text-3xl block">⏳</span>
+            <p class="font-sakura font-bold text-white text-sm">No watch history yet!</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = '';
+      history.forEach(item => {
+        const row = document.createElement('div');
+        row.className = "flex items-center justify-between p-2.5 bg-slate-950 border border-white/5 rounded-2xl hover:border-pink-500/40 transition cursor-pointer group";
+        row.setAttribute('data-interactive', 'true');
+        row.onclick = () => {
+          closeHistoryModal();
+          loadSeries(item.seriesId, item.epNum - 1);
+        };
+
+        row.innerHTML = `
+          <div class="flex items-center gap-3">
+            <img src="${item.coverPhoto}" alt="${item.seriesTitle}" class="w-12 h-14 object-cover rounded-xl shrink-0">
+            <div class="space-y-0.5">
+              <span class="text-[10px] font-mono text-pink-400 uppercase font-bold">${item.category}</span>
+              <h4 class="font-sakura font-bold text-white text-xs group-hover:text-pink-300 transition line-clamp-1">${item.seriesTitle}</h4>
+              <p class="text-[11px] text-slate-400 line-clamp-1">${item.epTitle}</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] font-mono text-slate-500 block">${item.timestamp}</span>
+            <span class="text-[10px] font-mono text-emerald-400 font-bold">Resume ▶</span>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+      bindInteractiveCursorListeners();
+    }
+
+    function clearWatchHistory() {
+      localStorage.removeItem('aniflix_history');
+      renderWatchHistory();
+      showToast("Watch history cleared.");
+    }
+
+    let comments = [
+      { author: 'SakuraBreeze', time: '10m ago', text: 'Universal embeds are playing every episode cleanly now!' },
+      { author: 'AnimeMaster', time: '40m ago', text: 'Switching SUB and DUB loads the respective voice stream directly.' }
+    ];
+
+    function renderComments() {
+      const container = document.getElementById('comments-list');
+      const badge = document.getElementById('comment-count-badge');
+      if (!container) return;
+
+      badge.textContent = `${comments.length} comments`;
+      container.innerHTML = '';
+
+      comments.forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'flex gap-3 text-xs';
+        item.innerHTML = `
+          <div class="w-8 h-8 rounded-full bg-slate-950 border border-white/10 flex items-center justify-center font-sakura font-bold text-xs text-pink-300 shrink-0">
+            ${c.author.charAt(0).toUpperCase()}
+          </div>
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-white font-sakura tracking-wide">${c.author}</span>
+              <span class="text-[10px] text-slate-500 font-mono">${c.time}</span>
+            </div>
+            <p class="text-slate-300 leading-relaxed font-sans">${c.text}</p>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function postComment() {
+      const textInput = document.getElementById('comment-text-input');
+      const text = textInput.value.trim();
+      if (!text) {
+        showToast('Please type a comment first!');
+        return;
+      }
+
+      const authorName = (currentUser && currentUser.username) ? currentUser.username : 'GuestViewer';
+      comments.unshift({ author: authorName, time: 'Just now', text });
+      textInput.value = '';
+      renderComments();
+      showToast('Comment posted to discussion lounge!');
+    }
+
+    // ==========================================================
+    // 6. TOKYO BROADCAST TIMETABLE & UTILITIES
+    // ==========================================================
+    const SCHEDULE_DATA = [
+      { title: "Solo Leveling: Season 2", time: "00:00 JST", ep: 12 },
+      { title: "One Piece", time: "09:30 JST", ep: 1115 },
+      { title: "Dandadan", time: "24:26 JST", ep: 8 },
+      { title: "Bleach: Thousand-Year Blood War", time: "23:30 JST", ep: 32 }
+    ];
+
+    function openScheduleModal() {
+      const container = document.getElementById('schedule-items-container');
+      container.innerHTML = '';
+      SCHEDULE_DATA.forEach(item => {
+        const row = document.createElement('div');
+        row.className = "flex items-center justify-between p-3 bg-slate-950 rounded-2xl border border-white/5";
+        row.innerHTML = `
+          <div>
+            <h4 class="font-bold text-white">${item.title}</h4>
+            <span class="text-emerald-400 font-mono text-[10px]">Episode ${item.ep} (Airing Soon)</span>
+          </div>
+          <span class="font-mono text-pink-400 font-bold">${item.time}</span>
+        `;
+        container.appendChild(row);
+      });
+      document.getElementById('schedule-modal').classList.remove('hidden');
+      document.getElementById('schedule-modal').classList.add('flex');
+    }
+
+    function closeScheduleModal() {
+      document.getElementById('schedule-modal').classList.add('hidden');
+      document.getElementById('schedule-modal').classList.remove('flex');
+    }
+
+    function toggleOledMode() {
+      document.body.classList.toggle('mode-oled');
+      const isOled = document.body.classList.contains('mode-oled');
+      document.getElementById('oled-mode-text').textContent = isOled ? "OLED Mode: ON" : "OLED Mode: Off";
+      showToast(isOled ? "🌙 OLED Eye-Care Active" : "Standard Mode Active");
+    }
+
+    function toggleExpandedTheater() {
+      isTheaterExpanded = !isTheaterExpanded;
+      const main = document.getElementById('main-content-layout');
+      const icon = document.getElementById('theater-expand-icon');
+
+      if (isTheaterExpanded) {
+        main.classList.remove('max-w-7xl');
+        main.classList.add('max-w-[96%]');
+        icon.className = 'ph-bold ph-arrows-in-line-horizontal text-pink-400';
+        showToast('Expanded Theater Mode');
+      } else {
+        main.classList.add('max-w-7xl');
+        main.classList.remove('max-w-[96%]');
+        icon.className = 'ph-bold ph-arrows-out-line-horizontal';
+        showToast('Standard Theater Mode');
+      }
+    }
+
+    // ==========================================================
+    // 7. STEALTH ADMIN CONSOLE (CTRL + SHIFT + K)
+    // ==========================================================
+    window.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && (e.key === 'K' || e.key === 'k')) {
+        e.preventDefault();
+        openStealthAdminModal();
+      }
+    });
+
+    window.addEventListener('hashchange', () => {
+      if (window.location.hash === '#admin-vault') openStealthAdminModal();
+    });
+
+    function openStealthAdminModal() {
+      document.getElementById('stealth-admin-modal').classList.remove('hidden');
+      document.getElementById('stealth-admin-modal').classList.add('flex');
+    }
+
+    function closeStealthAdminModal() {
+      document.getElementById('stealth-admin-modal').classList.add('hidden');
+      document.getElementById('stealth-admin-modal').classList.remove('flex');
+    }
+
+    function verifyStealthAdmin() {
+      const key = document.getElementById('stealth-admin-pass').value.trim();
+      if (key === "sakuraMaster99" || key === "sakura2026") {
+        closeStealthAdminModal();
+        showToast("👑 Welcome Administrator: Vault Unlocked.");
+      } else {
+        showToast("❌ Access Denied: Incorrect passcode.");
+      }
+    }
+
+    // ==========================================================
+    // 8. CATALOG RENDERING & UTILITIES
+    // ==========================================================
+    function renderCatalog(items = null) {
+      const container = document.getElementById('video-catalog-grid');
+      if (!container) return;
+
+      const list = items || (currentCorner === 'All' ? catalog : catalog.filter(v => v.category === currentCorner));
+      container.innerHTML = '';
+
+      list.forEach(series => {
+        const isCurrent = series.id === currentSeriesId;
+        const episodeCount = (series.episodes || []).length;
+        const card = document.createElement('div');
+        card.className = `group relative bg-slate-900/90 border ${isCurrent ? 'border-pink-400 shadow-xl shadow-pink-500/20' : 'border-white/10 hover:border-pink-400'} rounded-2xl overflow-hidden transition-all duration-300 flex flex-col cursor-pointer`;
+        card.setAttribute('data-interactive', 'true');
+        card.onclick = () => loadSeries(series.id, 0);
+
+        card.innerHTML = `
+          <div class="relative aspect-[3/4] overflow-hidden bg-slate-950">
+            <img 
+              src="${series.coverPhoto}" 
+              alt="${series.title}" 
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              onerror="this.src='https://cdn.myanimelist.net/images/anime/1188/136926l.jpg'"
+            >
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/30 opacity-70"></div>
+            
+            <div class="absolute top-2 right-2 flex items-center gap-1">
+              <span class="bg-pink-500/90 backdrop-blur-md text-[9px] font-mono font-bold px-1.5 py-0.5 rounded text-white shadow-md">
+                EP ${episodeCount}
+              </span>
+            </div>
+          </div>
+
+          <div class="p-3 flex-1 flex flex-col justify-between">
+            <h3 class="text-xs font-sakura font-bold text-white line-clamp-1 group-hover:text-pink-300 transition">${series.title}</h3>
+            <span class="text-[10px] font-mono text-slate-400 truncate mt-1">${series.author || 'Studio'}</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+      bindInteractiveCursorListeners();
+    }
+
+    function filterCorner(corner) {
+      currentCorner = corner;
+      const pills = document.querySelectorAll('.corner-pill');
+      pills.forEach(p => {
+        if (p.textContent.includes(corner) || (corner === 'All' && p.textContent.includes('All Anime'))) {
+          p.className = 'corner-pill active px-4 py-1.5 rounded-xl bg-pink-500 text-white shadow-md shadow-pink-500/30 font-medium tracking-wide flex items-center gap-1.5';
+        } else {
+          p.className = 'corner-pill px-4 py-1.5 rounded-xl bg-slate-900/90 text-slate-300 hover:text-pink-300 border border-white/10 transition font-medium tracking-wide flex items-center gap-1.5';
+        }
+      });
+      renderCatalog();
+    }
+
+    function sortVideos(criteria) {
+      if (criteria === 'popular') catalog.sort((a, b) => b.likes - a.likes);
+      else if (criteria === 'latest') catalog.reverse();
+      renderCatalog();
+    }
+
+    function likeCurrentVideo() {
+      const show = catalog.find(s => s.id === currentSeriesId);
+      if (show) {
+        show.likes += show.isLiked ? -1 : 1;
+        show.isLiked = !show.isLiked;
+        document.getElementById('like-count-active').textContent = `${(show.likes/1000).toFixed(1)}k`;
+        showToast(show.isLiked ? 'Added to Favorites!' : 'Removed from Favorites');
+      }
+    }
+
+    function copyShareUrl() {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        showToast('Link copied to clipboard!');
+      });
+    }
+
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById('toast-msg');
+      const label = document.getElementById('toast-text');
+      if (!toast || !label) return;
+      label.textContent = text;
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 2500);
+    }
+
+    // Cursor Follower
+    const isTouchOrMobile = () => (('ontouchstart' in window) || (navigator.maxTouchPoints > 0));
+
+    function initDeviceCursorMode() {
+      const desktopCursorRoot = document.getElementById('desktop-cursor-root');
+      if (isTouchOrMobile()) {
+        document.body.classList.remove('custom-cursor-enabled');
+        if (desktopCursorRoot) desktopCursorRoot.style.display = 'none';
+      } else {
+        document.body.classList.add('custom-cursor-enabled');
+        if (desktopCursorRoot) desktopCursorRoot.style.display = 'block';
+      }
+    }
+
+    const pointerEl = document.getElementById('custom-cursor-pointer');
+    const followerEl = document.getElementById('custom-cursor-follower');
+    let mouseX = -100, mouseY = -100, ringX = -100, ringY = -100;
+
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      if (pointerEl) {
+        pointerEl.style.left = `${mouseX}px`;
+        pointerEl.style.top = `${mouseY}px`;
+      }
+    });
+
+    function cursorLoop() {
+      if (followerEl) {
+        ringX += (mouseX - ringX) * 0.2;
+        ringY += (mouseY - ringY) * 0.2;
+        followerEl.style.left = `${ringX}px`;
+        followerEl.style.top = `${ringY}px`;
+      }
+      requestAnimationFrame(cursorLoop);
+    }
+    requestAnimationFrame(cursorLoop);
+
+    function bindInteractiveCursorListeners() {
+      if (isTouchOrMobile()) return;
+      const interactives = document.querySelectorAll('button, a, input, select, textarea, [data-interactive="true"]');
+      interactives.forEach(el => {
+        el.addEventListener('mouseenter', () => {
+          if (followerEl) followerEl.style.transform = 'translate(-50%, -50%) scale(1.35)';
+        });
+        el.addEventListener('mouseleave', () => {
+          if (followerEl) followerEl.style.transform = 'translate(-50%, -50%) scale(1)';
+        });
+      });
+    }
+
+    // Sakura Canvas Background
+    const canvas = document.getElementById('sakura-canvas');
+    const ctx = canvas.getContext('2d');
+    let petals = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Petal {
+      constructor() { this.reset(); }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = -10;
+        this.size = Math.random() * 8 + 5;
+        this.speedX = Math.random() * 1.5 - 0.75;
+        this.speedY = Math.random() * 1.6 + 1.1;
+        this.rotation = Math.random() * 360;
+        this.rotSpeed = (Math.random() - 0.5) * 1.8;
+        this.opacity = Math.random() * 0.5 + 0.4;
+      }
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.rotation += this.rotSpeed;
+        if (this.y > canvas.height + 20) this.reset();
+      }
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate((this.rotation * Math.PI) / 180);
+        ctx.globalAlpha = this.opacity;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(-this.size / 2, -this.size / 2, -this.size / 2, this.size / 2, 0, this.size);
+        ctx.bezierCurveTo(this.size / 2, this.size / 2, this.size / 2, -this.size / 2, 0, 0);
+        ctx.fillStyle = '#fbcfe8';
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+    for (let i = 0; i < 35; i++) petals.push(new Petal());
+
+    function animatePetals() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < petals.length; i++) {
+        petals[i].update();
+        petals[i].draw();
+      }
+      requestAnimationFrame(animatePetals);
+    }
+    animatePetals();
+
+    function handleBlossomClick() {
+      showToast('🌸 Sakura Blossom Sanctuary!');
+    }
+
+    window.onload = function() {
+      initUserSession();
+      initDeviceCursorMode();
+      renderComments();
+      loadSeries('mal-52299', 0);
+      bindInteractiveCursorListeners();
+      if (window.location.hash === '#admin-vault') openStealthAdminModal();
+    };
+  </script>
+</body>
+</html>
