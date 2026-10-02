@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>⚡ KuroWatch — Fast & Clean Anime Streaming</title>
+  <title>🌸 KuroWatch — Anime Streaming Sanctuary</title>
   
-  <meta name="description" content="KuroWatch — Stream anime series, movies, and episodes with instant playback, sub/dub options, and zero ads.">
+  <meta name="description" content="KuroWatch — Free anime streaming with multi-server playback, SUB/DUB toggle, and Tokyo broadcast schedule.">
+  <meta name="keywords" content="KuroWatch, Kuro Anime, Anime stream, watch anime online, KuroWatch free">
+  <meta name="robots" content="index, follow">
 
-  <!-- Dynamic Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -19,7 +20,7 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Zen+Maru+Gothic:wght@700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Zen+Maru+Gothic:wght@500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 
   <script>
     tailwind.config = {
@@ -27,15 +28,16 @@
       theme: {
         extend: {
           fontFamily: {
-            brand: ['"Zen Maru Gothic"', 'sans-serif'],
+            sakura: ['"Zen Maru Gothic"', 'sans-serif'],
             sans: ['"Plus Jakarta Sans"', 'sans-serif'],
             mono: ['"JetBrains Mono"', 'monospace'],
           },
           colors: {
-            primary: '#a855f7',
-            accent: '#ec4899',
-            bg: '#090a12',
-            surface: '#121422',
+            primary: '#f472b6',
+            glow: 'rgba(244, 114, 182, 0.45)',
+            accent: '#fb7185',
+            bg: '#080811',
+            surface: '#111222',
           }
         }
       }
@@ -44,14 +46,29 @@
 
   <style>
     :root {
-      --color-primary: #a855f7;
-      --color-bg: #07080f;
+      --color-primary: #f472b6;
+      --color-bg: #06070d;
+    }
+
+    body.mode-oled {
+      --color-bg: #000000 !important;
+      background-color: #000000 !important;
     }
 
     body {
       background-color: var(--color-bg);
       color: #f1f5f9;
       overflow-x: hidden;
+    }
+
+    #sakura-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
     }
 
     iframe {
@@ -62,73 +79,84 @@
   </style>
 </head>
 
-<body class="font-sans min-h-screen flex flex-col antialiased selection:bg-purple-500 selection:text-white">
+<body class="font-sans min-h-screen flex flex-col antialiased selection:bg-pink-500 selection:text-white">
+
+  <canvas id="sakura-canvas"></canvas>
 
   <!-- Top Announcement Bar -->
-  <aside class="relative z-30 bg-slate-950/90 backdrop-blur-md border-b border-white/5 py-2 px-4 text-xs font-mono flex items-center justify-between gap-3">
+  <aside class="relative z-30 bg-slate-950/80 backdrop-blur-md border-b border-white/5 py-2 px-4 text-xs font-mono flex items-center justify-between gap-3">
     <div class="flex items-center gap-2">
-      <span class="inline-flex items-center gap-1.5 text-purple-300 font-bold bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/30">
-        ⚡ KUROWATCH PORTAL
+      <span class="inline-flex items-center gap-1.5 text-pink-300 font-bold bg-pink-500/10 px-2.5 py-0.5 rounded-full border border-pink-500/30">
+        🌸 KUROWATCH OFFICIAL
       </span>
-      <span class="text-slate-300 hidden sm:inline">Clean Anime Streaming & Direct Relays Active.</span>
+      <span class="text-slate-300 hidden sm:inline">Active Video Stream Gateways Online.</span>
     </div>
 
-    <div class="text-[11px] font-mono text-purple-400 font-bold">
-      v2.0 Online
-    </div>
+    <button 
+      onclick="toggleOledMode()" 
+      id="btn-oled-mode"
+      class="text-[11px] font-mono font-bold text-amber-300 bg-slate-900 border border-amber-500/30 hover:bg-amber-500/20 px-3 py-1 rounded-xl transition flex items-center gap-1.5"
+    >
+      <i class="ph-bold ph-moon-stars"></i>
+      <span id="oled-mode-text">OLED Mode: Off</span>
+    </button>
   </aside>
 
-  <!-- Top Navigation Bar -->
-  <header class="sticky top-0 z-50 bg-[#090a14]/90 backdrop-blur-xl border-b border-white/5 px-4 lg:px-8 py-3.5 transition-all">
+  <!-- Top Navigation Header -->
+  <header class="sticky top-0 z-50 bg-[#080913]/90 backdrop-blur-xl border-b border-white/5 px-4 lg:px-8 py-3.5 transition-all duration-300">
     <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
       
       <!-- Brand Logo -->
-      <div onclick="window.scrollTo({top:0, behavior:'smooth'})" class="cursor-pointer flex items-center gap-2.5 select-none">
-        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 via-pink-500 to-indigo-600 border-2 border-purple-400/40 flex items-center justify-center text-xl shadow-lg shadow-purple-500/20">
-          ⚡
+      <div onclick="scrollToTop()" class="cursor-pointer flex items-center gap-2.5 select-none">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500/20 via-rose-500/20 to-purple-500/20 border-2 border-pink-400/40 flex items-center justify-center text-xl shadow-lg shadow-pink-500/20">
+          🌸
         </div>
         <div>
-          <span class="font-brand text-2xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-white font-black">
-            Kuro<span class="text-purple-400">Watch</span>
+          <span class="font-sakura text-2xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-rose-300 to-white font-black">
+            Kuro<span class="text-pink-400">Watch</span>
           </span>
-          <span class="text-[10px] block font-mono text-purple-300/80 uppercase tracking-widest -mt-1 font-semibold">
-            Anime Stream Vault
+          <span class="text-[10px] block font-mono text-pink-300/80 uppercase tracking-widest -mt-1 font-semibold">
+            Anime Sanctuary
           </span>
         </div>
       </div>
 
       <!-- Live Searchbar -->
       <div class="flex-1 max-w-xl hidden md:block">
-        <div class="relative rounded-2xl flex items-center px-4 py-2 bg-slate-900 border border-white/10 shadow-inner focus-within:border-purple-400 transition-all">
-          <i class="ph-bold ph-magnifying-glass text-purple-400 text-lg mr-3"></i>
+        <div class="relative rounded-2xl flex items-center px-4 py-2.5 bg-slate-900/90 border border-white/10 shadow-inner focus-within:border-pink-400 transition-all">
+          <i class="ph-bold ph-magnifying-glass text-pink-400 text-lg mr-3"></i>
           <input 
             type="text" 
             id="main-search-input" 
-            placeholder="Search anime (e.g. Solo Leveling, Bleach, One Piece)..." 
+            placeholder="Search thousands of animes (e.g. Solo Leveling, Bleach)..." 
             class="bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none w-full font-medium"
             oninput="handleSearchDebounced(this.value)"
           >
-          <span id="search-spinner" class="hidden text-purple-400 text-xs animate-spin ml-2"><i class="ph-bold ph-spinner"></i></span>
+          <span id="search-spinner" class="hidden text-pink-400 text-xs animate-spin ml-2"><i class="ph-bold ph-spinner"></i></span>
         </div>
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 sm:gap-3">
         <button 
           onclick="openScheduleModal()" 
-          class="p-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-300 hover:text-purple-300 hover:bg-slate-800 transition text-xs font-mono font-bold flex items-center gap-1.5"
+          title="Tokyo Broadcast Timetable" 
+          class="p-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-300 hover:text-pink-300 hover:bg-slate-800 transition shadow-sm flex items-center gap-1.5 text-xs font-mono font-bold"
         >
-          <i class="ph-bold ph-calendar text-lg text-purple-400"></i>
+          <i class="ph-bold ph-calendar text-lg text-pink-400"></i>
           <span class="hidden sm:inline">Schedule</span>
         </button>
 
         <button 
-          onclick="copyShareUrl()" 
-          class="p-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-md shadow-purple-600/30"
+          onclick="openHistoryModal()" 
+          title="Your Watch History" 
+          class="p-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-300 hover:text-pink-300 hover:bg-slate-800 transition shadow-sm flex items-center gap-1.5 text-xs font-mono font-bold"
         >
-          <i class="ph-bold ph-share-network text-base"></i>
-          <span class="hidden sm:inline">Share</span>
+          <i class="ph-bold ph-clock-counter-clockwise text-lg text-pink-400"></i>
+          <span class="hidden sm:inline">History</span>
         </button>
+
+        <div id="user-nav-container"></div>
       </div>
 
     </div>
@@ -137,7 +165,7 @@
   <main class="relative z-20 flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 space-y-10" id="main-content-layout">
 
     <!-- HERO THEATER SCREEN -->
-    <section class="relative z-40">
+    <section id="cinema-theater-section" class="relative z-40">
       
       <!-- STREAM SERVER SELECTOR & SUB/DUB -->
       <div class="bg-slate-950/90 border border-white/10 px-4 py-3 rounded-2xl mb-3 flex flex-wrap items-center justify-between gap-3 shadow-lg">
@@ -148,7 +176,7 @@
             <button 
               id="sub-mode-btn" 
               onclick="toggleSubDub('SUB')" 
-              class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1 bg-purple-600 text-white shadow-sm"
+              class="px-3 py-1 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1 bg-pink-500 text-white shadow-sm"
             >
               <i class="ph-bold ph-subtitles text-sm"></i> SUB
             </button>
@@ -161,38 +189,44 @@
             </button>
           </div>
 
-          <span class="text-xs font-mono font-bold text-purple-400 flex items-center gap-1.5 ml-1">
+          <span class="text-xs font-mono font-bold text-pink-400 flex items-center gap-1.5 ml-1">
             <i class="ph-bold ph-hard-drives text-base"></i> SERVER:
           </span>
           <div id="server-buttons-list" class="flex items-center gap-2 flex-wrap"></div>
         </div>
 
-        <div class="text-xs font-mono text-slate-400">
-          <span class="text-emerald-400 font-bold">● Active Gateway</span>
+        <div class="flex items-center gap-2.5 text-xs font-mono text-slate-400 flex-wrap">
+          <button 
+            onclick="toggleExpandedTheater()" 
+            id="btn-theater-expand"
+            class="p-1.5 rounded-xl bg-slate-900 border border-white/10 hover:text-pink-400 transition text-sm" 
+            title="Expand / Contract Player Container"
+          >
+            <i class="ph-bold ph-arrows-out-line-horizontal" id="theater-expand-icon"></i>
+          </button>
         </div>
       </div>
 
-      <!-- VIDEO PLAYER STAGE -->
+      <!-- VIDEO PLAYER CANVAS -->
       <div class="bg-slate-950/90 border-2 border-white/10 rounded-3xl overflow-hidden shadow-2xl relative">
         <div class="relative bg-black aspect-video max-h-[620px] w-full flex items-center justify-center overflow-hidden">
           
-          <!-- Direct HTML5 Player (Default - 100% Reliable Playback) -->
+          <!-- Native HTML5 Direct Player -->
           <video 
             id="main-video-player" 
-            class="w-full h-full object-contain" 
+            class="w-full h-full object-contain hidden" 
             controls 
             playsinline 
             crossorigin="anonymous"
-            poster="https://cdn.myanimelist.net/images/anime/1188/136926l.jpg"
-            src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
           >
-            Your browser does not support HTML5 video playback.
+            Your browser does not support HTML5 video.
           </video>
 
-          <!-- Universal Gateway Embed Iframe -->
+          <!-- Primary Iframe Gateway -->
           <iframe 
             id="embed-video-player" 
-            class="w-full h-full border-0 hidden" 
+            class="w-full h-full border-0" 
+            src="https://player.autoembed.cc/embed/anime/52299/1"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
             allowfullscreen="true"
             webkitallowfullscreen="true"
@@ -215,20 +249,20 @@
 
               <div class="space-y-1.5">
                 <div class="flex flex-wrap items-center gap-2">
-                  <span class="px-3 py-0.5 rounded-full text-xs font-brand font-bold bg-purple-600 text-white border border-purple-400">
-                    KUROWATCH STREAM
+                  <span class="px-3 py-0.5 rounded-full text-xs font-sakura font-bold bg-pink-500 text-white border border-pink-400">
+                    KUROWATCH EXCLUSIVE
                   </span>
-                  <span id="player-badge-type" class="px-2 py-0.5 rounded-md text-[10px] font-mono text-purple-300 bg-purple-500/10 border border-purple-500/30 font-bold">
+                  <span id="player-badge-type" class="px-2 py-0.5 rounded-md text-[10px] font-mono text-pink-300 bg-pink-500/10 border border-pink-500/30 font-bold">
                     SUB: EP 1
                   </span>
                   <span class="px-2 py-0.5 rounded-md text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 font-bold">
                     1080P HD
                   </span>
                 </div>
-                <h1 id="player-title" class="text-xl sm:text-2xl font-brand font-bold text-white tracking-wide">
+                <h1 id="player-title" class="text-xl sm:text-2xl font-sakura font-bold text-white tracking-wide">
                   Solo Leveling (Ore dake Level Up na Ken)
                 </h1>
-                <p class="text-xs text-purple-400 font-mono font-semibold" id="player-active-episode-title">
+                <p class="text-xs text-pink-400 font-mono font-semibold" id="player-active-episode-title">
                   Now Playing: Episode 1
                 </p>
                 <p class="text-xs text-slate-400 font-mono">
@@ -237,30 +271,33 @@
               </div>
             </div>
 
-            <button 
-              onclick="copyShareUrl()" 
-              class="px-4 py-2 rounded-xl bg-slate-950 border border-white/10 text-xs font-semibold text-slate-200 flex items-center gap-2 hover:border-purple-400 transition"
-            >
-              <i class="ph-bold ph-share-network"></i>
-              <span>Share Series</span>
-            </button>
+            <div class="flex items-center gap-2.5">
+              <button 
+                onclick="copyShareUrl()" 
+                class="px-4 py-2 rounded-xl bg-slate-950 border border-white/10 text-xs font-semibold text-slate-200 flex items-center gap-2 hover:border-pink-400 transition"
+              >
+                <i class="ph-bold ph-share-network"></i>
+                <span>Share</span>
+              </button>
+            </div>
+
           </div>
 
           <p id="player-description" class="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-4xl pt-2 border-t border-white/5">
             In a world where hunters must battle deadly monsters to protect humanity, Sung Jinwoo struggles as the weakest hunter before awakening a secret quest line.
           </p>
 
-          <!-- EPISODE SELECTOR SECTION -->
+          <!-- Episode Selector -->
           <div class="pt-4 border-t border-white/5 space-y-3">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-brand font-bold text-white flex items-center gap-2">
-                <i class="ph-bold ph-list-numbers text-purple-400 text-base"></i>
+              <span class="text-xs font-sakura font-bold text-white flex items-center gap-2">
+                <i class="ph-bold ph-list-numbers text-pink-400 text-base"></i>
                 <span>SELECT EPISODE</span>
-                <span id="episode-total-count" class="text-[10px] font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full font-bold">
+                <span id="episode-total-count" class="text-[10px] font-mono bg-pink-500/20 text-pink-300 px-2 py-0.5 rounded-full font-bold">
                   12 Episodes Available
                 </span>
               </span>
-              <span class="text-[11px] font-mono text-slate-500">Tap any episode to stream</span>
+              <span class="text-[11px] font-mono text-slate-500">Click any episode to start streaming</span>
             </div>
 
             <div id="episodes-list-container" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5 max-h-[300px] overflow-y-auto pr-1"></div>
@@ -271,14 +308,14 @@
       </div>
     </section>
 
-    <!-- ANIME CATALOG GRID -->
+    <!-- CATALOG GRID (Properly matched posters & data) -->
     <section class="space-y-5">
       <div class="flex items-center justify-between border-b border-white/10 pb-4">
         <div>
-          <h2 class="text-2xl font-brand font-bold text-white flex items-center gap-2">
-            <span>⚡</span> <span>FEATURED ANIME CATALOG</span>
+          <h2 class="text-2xl font-sakura font-bold text-white flex items-center gap-2">
+            <span>🌸</span> <span id="catalog-section-title">FEATURED ANIME RELEASES</span>
           </h2>
-          <p class="text-xs text-slate-400">Click any title to load all episodes and streaming mirrors</p>
+          <p class="text-xs text-slate-400">Select any series to watch instantly</p>
         </div>
       </div>
 
@@ -287,46 +324,74 @@
 
   </main>
 
-  <!-- MODAL: SCHEDULE -->
+  <!-- MODALS -->
   <div id="schedule-modal" class="fixed inset-0 z-50 bg-black/90 hidden items-center justify-center p-4">
-    <div class="bg-slate-900 border border-white/10 w-full max-w-2xl rounded-3xl p-6 space-y-4 max-h-[85vh] flex flex-col">
+    <div class="bg-slate-900 border border-white/10 w-full max-w-3xl rounded-3xl p-6 space-y-4 max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-white/10 pb-3">
-        <h3 class="text-base font-brand font-bold text-white">Tokyo Broadcast Timetable (JST)</h3>
+        <h3 class="text-base font-sakura font-bold text-white">Tokyo Broadcast Timetable (JST)</h3>
         <button onclick="closeScheduleModal()" class="text-slate-400 hover:text-white"><i class="ph-bold ph-x text-lg"></i></button>
       </div>
-      <div class="flex-1 overflow-y-auto space-y-2 text-xs">
+      <div class="space-y-2 text-xs">
         <div class="flex items-center justify-between p-3 bg-slate-950 rounded-2xl border border-white/5">
-          <div><h4 class="font-bold text-white">Solo Leveling: Season 2</h4><span class="text-emerald-400 font-mono text-[10px]">Episode 12 (Airing Soon)</span></div>
-          <span class="font-mono text-purple-400 font-bold">24:00 JST</span>
+          <div><h4 class="font-bold text-white">Solo Leveling</h4><span class="text-emerald-400 font-mono text-[10px]">Episode 12 (Airing Soon)</span></div>
+          <span class="font-mono text-pink-400 font-bold">24:00 JST</span>
         </div>
         <div class="flex items-center justify-between p-3 bg-slate-950 rounded-2xl border border-white/5">
           <div><h4 class="font-bold text-white">One Piece</h4><span class="text-emerald-400 font-mono text-[10px]">Episode 1115 (Airing Soon)</span></div>
-          <span class="font-mono text-purple-400 font-bold">09:30 JST</span>
+          <span class="font-mono text-pink-400 font-bold">09:30 JST</span>
         </div>
         <div class="flex items-center justify-between p-3 bg-slate-950 rounded-2xl border border-white/5">
           <div><h4 class="font-bold text-white">Bleach: Thousand-Year Blood War</h4><span class="text-emerald-400 font-mono text-[10px]">Episode 32</span></div>
-          <span class="font-mono text-purple-400 font-bold">23:30 JST</span>
+          <span class="font-mono text-pink-400 font-bold">23:30 JST</span>
         </div>
       </div>
     </div>
   </div>
 
+  <div id="history-modal" class="fixed inset-0 z-50 bg-black/85 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-white/10 w-full max-w-xl rounded-3xl p-6 space-y-4 max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <h3 class="text-base font-sakura font-bold text-white">Your Watch History</h3>
+        <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-white"><i class="ph-bold ph-x text-lg"></i></button>
+      </div>
+      <div id="history-list-container" class="flex-1 overflow-y-auto space-y-2 text-xs"></div>
+    </div>
+  </div>
+
+  <div id="auth-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-white/10 w-full max-w-sm rounded-3xl shadow-2xl p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <h3 class="text-base font-sakura font-bold text-white">KuroWatch Account</h3>
+        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-white"><i class="ph-bold ph-x"></i></button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-400 mb-1">Nickname</label>
+          <input type="text" id="auth-username-input" placeholder="e.g. KuroFan" class="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white outline-none">
+        </div>
+        <button onclick="handleAuthSubmit()" class="w-full py-2.5 rounded-xl bg-pink-500 font-bold text-white hover:bg-pink-400 transition">Save & Sign In</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification -->
-  <div id="toast-msg" class="fixed bottom-6 right-6 bg-slate-900 border-2 border-purple-400 text-white px-5 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-3 transform translate-y-24 opacity-0 transition-all duration-300 z-50">
-    <div class="w-7 h-7 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm">⚡</div>
-    <span id="toast-text" class="font-mono text-purple-200">Notification</span>
+  <div id="toast-msg" class="fixed bottom-6 right-6 bg-slate-900 border-2 border-pink-400 text-white px-5 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-3 transform translate-y-24 opacity-0 transition-all duration-300 z-50">
+    <div class="w-7 h-7 rounded-full bg-pink-500 text-white flex items-center justify-center text-sm">🌸</div>
+    <span id="toast-text" class="font-mono text-pink-200">Notification</span>
   </div>
 
   <script>
-    // Master Catalog with Verified Matching MAL IDs, Covers, and Titles
-    const masterCatalog = [
+    // ==========================================================
+    // 1. EXACTLY MATCHED CATALOG DATA
+    // ==========================================================
+    let catalog = [
       {
         id: 'mal-52299',
         mal_id: 52299,
         title: 'Solo Leveling (Ore dake Level Up na Ken)',
         author: 'A-1 Pictures',
         coverPhoto: 'https://cdn.myanimelist.net/images/anime/1188/136926l.jpg',
-        desc: 'In a world where hunters must battle deadly monsters to protect humanity, Sung Jinwoo struggles as the weakest hunter before awakening a secret quest line.',
+        desc: 'In a world where hunters battle monsters, Sung Jinwoo awakens a quest line that lets him level up alone.',
         totalEps: 12
       },
       {
@@ -335,7 +400,7 @@
         title: 'Frieren: Beyond Journey\'s End',
         author: 'Madhouse',
         coverPhoto: 'https://cdn.myanimelist.net/images/anime/1015/138075l.jpg',
-        desc: 'The demon king has been defeated, and the victorious hero party returns home before disbanding.',
+        desc: 'Elf mage Frieren begins a journey to understand mortals after the passing of her former party leader.',
         totalEps: 28
       },
       {
@@ -344,7 +409,7 @@
         title: 'Jujutsu Kaisen Season 2',
         author: 'MAPPA',
         coverPhoto: 'https://cdn.myanimelist.net/images/anime/1792/138022l.jpg',
-        desc: 'The Shibuya Incident begins as cursed spirits and curse users gather on October 31st to trap Gojo Satoru.',
+        desc: 'The Shibuya Incident unfolds as curse users seek to permanently seal Gojo Satoru.',
         totalEps: 23
       },
       {
@@ -353,7 +418,7 @@
         title: 'Demon Slayer: Kimetsu no Yaiba',
         author: 'ufotable',
         coverPhoto: 'https://cdn.myanimelist.net/images/anime/1286/99889l.jpg',
-        desc: 'A young boy whose family is slaughtered by a demon begins a quest to turn his demon sister human again.',
+        desc: 'Tanjiro Kamado trains to become a Demon Slayer to cure his demonized sister Nezuko.',
         totalEps: 26
       },
       {
@@ -362,7 +427,7 @@
         title: 'One Piece',
         author: 'Toei Animation',
         coverPhoto: 'https://cdn.myanimelist.net/images/anime/6/73245l.jpg',
-        desc: 'Monkey D. Luffy sets sail with his eccentric crew to find the legendary treasure known as the One Piece.',
+        desc: 'Monkey D. Luffy sets sail with his crew across the Grand Line in search of the One Piece.',
         totalEps: 1100
       },
       {
@@ -371,7 +436,7 @@
         title: 'Bleach: Thousand-Year Blood War',
         author: 'Pierrot',
         coverPhoto: 'https://cdn.myanimelist.net/images/anime/1764/126627l.jpg',
-        desc: 'The peace is broken when warning sirens blare through Soul Society as residents disappear without a trace.',
+        desc: 'Soul Society is suddenly invaded by the Quincy empire led by Yhwach.',
         totalEps: 13
       }
     ];
@@ -380,33 +445,37 @@
     let currentEpisodeNum = 1;
     let currentAudioMode = 'SUB';
     let currentServerIndex = 0;
+    let isTheaterExpanded = false;
 
     const player = document.getElementById('main-video-player');
     const embedIframe = document.getElementById('embed-video-player');
 
-    function getServers(malId, epNum) {
+    // ==========================================================
+    // 2. WORKING STREAM GATEWAYS
+    // ==========================================================
+    function getEpisodeServers(malId, epNum) {
       const isDub = (currentAudioMode === 'DUB');
       return [
         { 
-          name: 'Direct Stream (Fast)', 
-          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', 
-          type: 'video' 
-        },
-        { 
-          name: 'AutoEmbed (Multi)', 
+          name: 'AutoEmbed (Server 1)', 
           url: `https://player.autoembed.cc/embed/anime/${malId}/${epNum}?dub=${isDub ? 1 : 0}`, 
           type: 'embed' 
         },
         { 
-          name: 'VidSrc Pro', 
+          name: 'VidSrc (Server 2)', 
           url: `https://vidsrc.cc/v2/embed/anime/${malId}/${epNum}/${currentAudioMode.toLowerCase()}`, 
           type: 'embed' 
+        },
+        { 
+          name: 'Direct Stream (Backup)', 
+          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', 
+          type: 'video' 
         }
       ];
     }
 
     function loadSeries(seriesId, epNum = 1) {
-      const show = masterCatalog.find(s => s.id === seriesId);
+      const show = catalog.find(s => s.id === seriesId);
       if (!show) return;
 
       currentSeriesId = seriesId;
@@ -431,17 +500,17 @@
       for (let i = 1; i <= displayCount; i++) {
         const isCurrent = (i === currentEpisodeNum);
         const card = document.createElement('button');
-        card.className = `p-2 rounded-xl border text-left transition flex flex-col justify-between ${
+        card.className = `ep-btn p-2 rounded-xl border text-left transition flex flex-col justify-between ${
           isCurrent 
-            ? 'bg-purple-600/20 border-purple-400 shadow-md shadow-purple-500/20' 
-            : 'bg-slate-950 border-white/10 hover:border-purple-500/50'
+            ? 'bg-pink-500/20 border-pink-400 shadow-md shadow-pink-500/20' 
+            : 'bg-slate-950 border-white/10 hover:border-pink-500/50'
         }`;
         card.onclick = () => playEpisode(i);
 
         card.innerHTML = `
           <div class="flex items-center justify-between w-full">
-            <span class="text-[10px] font-mono font-bold text-purple-300">EP ${i}</span>
-            <i class="ph-fill ${isCurrent ? 'ph-waveform text-purple-400' : 'ph-play text-slate-500'} text-xs"></i>
+            <span class="text-[10px] font-mono font-bold text-pink-300">EP ${i}</span>
+            <i class="ph-fill ${isCurrent ? 'ph-waveform text-pink-400' : 'ph-play text-slate-500'} text-xs"></i>
           </div>
           <span class="text-xs font-semibold text-white truncate mt-1">Episode ${i}</span>
         `;
@@ -451,13 +520,20 @@
 
     function playEpisode(epNum) {
       currentEpisodeNum = epNum;
-      const show = masterCatalog.find(s => s.id === currentSeriesId);
+      const show = catalog.find(s => s.id === currentSeriesId);
       if (!show) return;
 
       document.getElementById('player-active-episode-title').textContent = `Now Playing: Episode ${epNum}`;
       document.getElementById('player-badge-type').textContent = `${currentAudioMode}: EP ${epNum}`;
 
-      renderEpisodes(show.totalEps);
+      document.querySelectorAll('#episodes-list-container .ep-btn').forEach((btn, idx) => {
+        if (idx + 1 === epNum) {
+          btn.className = 'ep-btn p-2 rounded-xl border text-left transition flex flex-col justify-between bg-pink-500/20 border-pink-400 shadow-md shadow-pink-500/20';
+        } else {
+          btn.className = 'ep-btn p-2 rounded-xl border text-left transition flex flex-col justify-between bg-slate-950 border-white/10 hover:border-pink-500/50';
+        }
+      });
+
       renderServerButtons(show.mal_id, epNum);
       switchStream(show.mal_id, epNum, currentServerIndex);
     }
@@ -465,16 +541,21 @@
     function renderServerButtons(malId, epNum) {
       const container = document.getElementById('server-buttons-list');
       container.innerHTML = '';
-      const servers = getServers(malId, epNum);
+      const servers = getEpisodeServers(malId, epNum);
 
       servers.forEach((srv, idx) => {
         const btn = document.createElement('button');
-        btn.className = `px-3 py-1 rounded-xl text-xs font-mono font-bold transition flex items-center gap-1.5 ${
-          idx === currentServerIndex ? 'bg-purple-600 text-white shadow-md' : 'bg-slate-900 text-slate-300 hover:text-white border border-white/10'
+        btn.className = `srv-btn px-3 py-1 rounded-xl text-xs font-mono font-bold transition flex items-center gap-1.5 ${
+          idx === currentServerIndex ? 'bg-pink-500 text-white shadow-md' : 'bg-slate-900 text-slate-300 hover:text-white border border-white/10'
         }`;
         btn.textContent = srv.name;
         btn.onclick = () => {
           currentServerIndex = idx;
+          container.querySelectorAll('.srv-btn').forEach((b, bIdx) => {
+            b.className = (bIdx === idx) 
+              ? 'srv-btn px-3 py-1 rounded-xl text-xs font-mono font-bold bg-pink-500 text-white shadow-md' 
+              : 'srv-btn px-3 py-1 rounded-xl text-xs font-mono font-bold bg-slate-900 text-slate-300 hover:text-white border border-white/10';
+          });
           switchStream(malId, epNum, idx);
         };
         container.appendChild(btn);
@@ -482,7 +563,8 @@
     }
 
     function switchStream(malId, epNum, serverIdx) {
-      const servers = getServers(malId, epNum);
+      currentServerIndex = serverIdx;
+      const servers = getEpisodeServers(malId, epNum);
       const target = servers[serverIdx] || servers[0];
 
       if (target.type === 'embed') {
@@ -498,47 +580,203 @@
         player.load();
         player.play().catch(() => {});
       }
-      renderServerButtons(malId, epNum);
     }
 
     function toggleSubDub(mode) {
       currentAudioMode = mode;
       document.getElementById('sub-mode-btn').className = (mode === 'SUB') 
-        ? 'px-3 py-1 rounded-lg text-xs font-mono font-bold bg-purple-600 text-white shadow-sm' 
+        ? 'px-3 py-1 rounded-lg text-xs font-mono font-bold bg-pink-500 text-white' 
         : 'px-3 py-1 rounded-lg text-xs font-mono font-bold text-slate-400 hover:text-white';
       document.getElementById('dub-mode-btn').className = (mode === 'DUB') 
-        ? 'px-3 py-1 rounded-lg text-xs font-mono font-bold bg-purple-600 text-white shadow-sm' 
+        ? 'px-3 py-1 rounded-lg text-xs font-mono font-bold bg-pink-500 text-white' 
         : 'px-3 py-1 rounded-lg text-xs font-mono font-bold text-slate-400 hover:text-white';
       playEpisode(currentEpisodeNum);
       showToast(`Switched audio to ${mode}`);
     }
 
-    function renderCatalog() {
+    // ==========================================================
+    // 3. JIKAN V4 API SEARCH (CACHED)
+    // ==========================================================
+    let searchTimer = null;
+    const searchCache = {};
+
+    function handleSearchDebounced(query) {
+      clearTimeout(searchTimer);
+      const spinner = document.getElementById('search-spinner');
+
+      if (!query || query.trim().length === 0) {
+        renderCatalog();
+        return;
+      }
+
+      spinner.classList.remove('hidden');
+
+      if (searchCache[query]) {
+        renderCatalog(searchCache[query]);
+        spinner.classList.add('hidden');
+        return;
+      }
+
+      searchTimer = setTimeout(async () => {
+        try {
+          const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=12`);
+          if (res.status === 429) {
+            filterLocal(query);
+            return;
+          }
+
+          const data = await res.json();
+          if (data && data.data && data.data.length > 0) {
+            const results = data.data.map(item => ({
+              id: 'mal-' + item.mal_id,
+              mal_id: item.mal_id,
+              title: item.title_english || item.title,
+              author: (item.studios && item.studios[0]) ? item.studios[0].name : 'Studio',
+              coverPhoto: item.images.jpg.large_image_url || item.images.jpg.image_url,
+              desc: item.synopsis || 'Anime series synopsis.',
+              totalEps: item.episodes || 12
+            }));
+
+            searchCache[query] = results;
+
+            results.forEach(r => {
+              if (!catalog.find(c => c.id === r.id)) catalog.push(r);
+            });
+            renderCatalog(results);
+          } else {
+            filterLocal(query);
+          }
+        } catch (e) {
+          filterLocal(query);
+        } finally {
+          spinner.classList.add('hidden');
+        }
+      }, 500);
+    }
+
+    function filterLocal(query) {
+      const filtered = catalog.filter(s => s.title.toLowerCase().includes(query.toLowerCase()));
+      renderCatalog(filtered);
+    }
+
+    function renderCatalog(items = null) {
       const container = document.getElementById('video-catalog-grid');
       container.innerHTML = '';
+      const list = items || catalog;
 
-      masterCatalog.forEach(show => {
+      list.forEach(show => {
         const isCurrent = (show.id === currentSeriesId);
         const card = document.createElement('div');
         card.className = `group relative bg-slate-900/90 border ${
-          isCurrent ? 'border-purple-400 shadow-xl shadow-purple-500/20' : 'border-white/10 hover:border-purple-400'
+          isCurrent ? 'border-pink-400 shadow-xl shadow-pink-500/20' : 'border-white/10 hover:border-pink-400'
         } rounded-2xl overflow-hidden transition duration-300 flex flex-col cursor-pointer`;
         card.onclick = () => loadSeries(show.id, 1);
 
         card.innerHTML = `
           <div class="relative aspect-[3/4] overflow-hidden bg-slate-950">
             <img src="${show.coverPhoto}" alt="${show.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-            <span class="absolute top-2 right-2 bg-purple-600/90 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded text-white shadow-md">
-              EP ${show.totalEps}
+            <span class="absolute top-2 right-2 bg-pink-500/90 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded text-white shadow-md">
+              EP ${show.totalEps || 12}
             </span>
           </div>
           <div class="p-3 flex-1 flex flex-col justify-between">
-            <h3 class="text-xs font-brand font-bold text-white line-clamp-1 group-hover:text-purple-300 transition">${show.title}</h3>
+            <h3 class="text-xs font-sakura font-bold text-white line-clamp-1 group-hover:text-pink-300 transition">${show.title}</h3>
             <span class="text-[10px] font-mono text-slate-400 truncate mt-1">${show.author || 'Studio'}</span>
           </div>
         `;
         container.appendChild(card);
       });
+    }
+
+    // ==========================================================
+    // 4. USER AUTH & MODALS
+    // ==========================================================
+    let currentUser = null;
+
+    function initUserSession() {
+      const stored = localStorage.getItem('kurowatch_user');
+      if (stored) {
+        try { currentUser = JSON.parse(stored); } catch(e) {}
+      }
+      updateAuthUI();
+    }
+
+    function updateAuthUI() {
+      const container = document.getElementById('user-nav-container');
+      if (!container) return;
+
+      if (currentUser && currentUser.username) {
+        const firstLetter = currentUser.username.charAt(0).toUpperCase();
+        container.innerHTML = `
+          <div class="flex items-center gap-2 bg-slate-900 border border-white/10 px-2.5 py-1.5 rounded-xl">
+            <div class="w-6 h-6 rounded-lg bg-pink-500 text-white font-bold flex items-center justify-center text-xs">
+              ${firstLetter}
+            </div>
+            <span class="text-xs font-mono text-pink-300 font-bold hidden sm:inline max-w-[90px] truncate">
+              ${currentUser.username}
+            </span>
+            <button onclick="logoutUser()" title="Sign Out" class="text-slate-400 hover:text-rose-400 text-sm ml-1">
+              <i class="ph-bold ph-sign-out"></i>
+            </button>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <button 
+            onclick="openAuthModal()" 
+            class="px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-pink-300 hover:text-white hover:bg-slate-800 transition shadow-sm text-xs font-mono font-bold flex items-center gap-1.5"
+          >
+            <i class="ph-bold ph-user-circle text-base"></i>
+            <span>Sign In</span>
+          </button>
+        `;
+      }
+    }
+
+    function openAuthModal() {
+      document.getElementById('auth-modal').classList.remove('hidden');
+      document.getElementById('auth-modal').classList.add('flex');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('auth-modal').classList.add('hidden');
+      document.getElementById('auth-modal').classList.remove('flex');
+    }
+
+    function handleAuthSubmit() {
+      const username = document.getElementById('auth-username-input').value.trim();
+      if (!username) {
+        showToast("Please enter a nickname!");
+        return;
+      }
+      currentUser = { username };
+      localStorage.setItem('kurowatch_user', JSON.stringify(currentUser));
+      updateAuthUI();
+      closeAuthModal();
+      showToast(`🌸 Welcome to KuroWatch, ${username}!`);
+    }
+
+    function logoutUser() {
+      localStorage.removeItem('kurowatch_user');
+      currentUser = null;
+      updateAuthUI();
+      showToast("Signed out.");
+    }
+
+    function toggleOledMode() {
+      document.body.classList.toggle('mode-oled');
+      const isOled = document.body.classList.contains('mode-oled');
+      document.getElementById('oled-mode-text').textContent = isOled ? "OLED Mode: ON" : "OLED Mode: Off";
+      showToast(isOled ? "🌙 OLED Mode Active" : "Standard Dark Mode Active");
+    }
+
+    function toggleExpandedTheater() {
+      isTheaterExpanded = !isTheaterExpanded;
+      const main = document.getElementById('main-content-layout');
+      main.className = isTheaterExpanded 
+        ? "relative z-20 flex-1 max-w-[96%] w-full mx-auto px-4 lg:px-8 py-6 space-y-10"
+        : "relative z-20 flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 space-y-10";
+      showToast(isTheaterExpanded ? "Expanded Theater View" : "Normal View");
     }
 
     function openScheduleModal() {
@@ -547,10 +785,50 @@
     }
 
     function closeScheduleModal() {
-### Part 1: Why Your Site Didn't Show Up in Google Search
+      document.getElementByIdTwo distinct mechanics explain why your website did not appear in Google search results and why an existing platform showed up instead.
 
-When you search for a brand new website on Google, it will **not** show up immediately:
-1. **Google Indexing Takes Days/Weeks:** Google's web crawlers do not know a site exists until it is submitted through Google Search Console or linked to from other indexed sites. 
-2. **Typing the Direct URL:** To open your site on any other device (like your phone), you must type the exact link into the browser address bar:
+---
+
+### Why Your Site Did Not Show Up in Search Engines
+
+1. **Typing into the Search Bar vs. the Address Bar:**
+   * Entering words like "AniSakura" into a search bar queries Google’s index, not direct website addresses.
+   * Google takes days or weeks to crawl and index brand-new GitHub Pages sites. Because a pre-existing platform already holds the "AniSakura" name with established web traffic and backlinks, search engines rank that existing domain first.
+   * To view your site directly on any mobile device or external computer right now, enter the full URL directly into the browser's top **address bar** (where `https://` resides):
+     ```text
+     [https://kuro2607.github.io/aniflix1/](https://kuro2607.github.io/aniflix1/)
+     ```
+
+2. **GitHub Repository Name vs. Display Title:**
+   * Your GitHub repository itself is named `aniflix1`. GitHub Pages derives its link structure directly from your username and repository name (`kuro2607.github.io/aniflix1/`).
+   * Renaming the visual text inside your HTML header updates the page header, but the web address remains tied to the repository slug unless you rename the repository in your GitHub settings.
+
+---
+
+### Distinctive Brand Names for Better Search Visibility
+
+To avoid competing against mature streaming domains, choose a clean, distinctive name that combines your handle (`kuro`) with an anime-themed term.
+
+| Brand Option | Suggested Repo Slug | Target URL on GitHub Pages |
+| :--- | :--- | :--- |
+| **KuroWatch** | `kurowatch` | `kuro2607.github.io/kurowatch/` |
+| **KuroStream** | `kurostream` | `kuro2607.github.io/kurostream/` |
+| **KuroFlix** | `kuroflix` | `kuro2607.github.io/kuroflix/` |
+| **KuroNeko Stream** | `kuroneko-stream` | `kuro2607.github.io/kuroneko-stream/` |
+
+**KuroWatch** provides a concise, distinct profile with minimal competition from existing domains.
+
+---
+
+### Step 1: Update Your Repository Name on GitHub
+
+To align your URL with your new brand:
+
+1. Open your repository on GitHub (`https://github.com/kuro2607/aniflix1`).
+2. Click the **Settings** tab (the gear icon on the top horizontal bar).
+3. Under the **General** section, locate the **Repository name** field.
+4. Replace `aniflix1` with `kurowatch`.
+5. Click **Rename**.
+6. Check **Settings** $\rightarrow$ **Pages** to verify your updated live link:
    ```text
-   [https://kuro2607.github.io/aniflix1/](https://kuro2607.github.io/aniflix1/)
+   [https://kuro2607.github.io/kurowatch/](https://kuro2607.github.io/kurowatch/)
