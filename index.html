@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🌸 AniSakura — Anime Streaming Sanctuary</title>
+  <title>🌸 AniSakura — Anime Streaming Portal</title>
   
-  <meta name="description" content="AniFlix Sakura — Stream anime episodes with pre-rendered offline resilience, multi-server embed relays, and live broadcast schedules.">
+  <meta name="description" content="AniSakura — Stream thousands of anime series and movies with multi-server embed relays, sub/dub audio, and real-time schedules.">
 
-  <!-- Dynamic Favicon -->
-  <link id="site-favicon" rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -16,12 +16,9 @@
   <!-- Phosphor Icons -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
-  <!-- HLS.js for direct fallback streams -->
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Zen+Maru+Gothic:wght@500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 
   <script>
@@ -35,13 +32,11 @@
             mono: ['"JetBrains Mono"', 'monospace'],
           },
           colors: {
-            theme: {
-              primary: '#f472b6',
-              glow: 'rgba(244, 114, 182, 0.45)',
-              accent: '#fb7185',
-              bg: '#080811',
-              surface: '#111222',
-            }
+            primary: '#f472b6',
+            glow: 'rgba(244, 114, 182, 0.45)',
+            accent: '#fb7185',
+            bg: '#080811',
+            surface: '#111222',
           }
         }
       }
@@ -85,12 +80,10 @@
       z-index: 1;
     }
 
-    ::cue {
-      background-color: rgba(0, 0, 0, 0.85) !important;
-      color: #ffffff !important;
-      font-family: 'Plus Jakarta Sans', sans-serif !important;
-      font-size: 15px !important;
-      font-weight: 600 !important;
+    iframe {
+      border: 0;
+      width: 100%;
+      height: 100%;
     }
   </style>
 </head>
@@ -105,9 +98,9 @@
   <aside class="relative z-30 bg-slate-950/80 backdrop-blur-md border-b border-white/5 py-2 px-4 text-xs font-mono flex items-center justify-between gap-3">
     <div class="flex items-center gap-2">
       <span class="inline-flex items-center gap-1.5 text-pink-300 font-bold bg-pink-500/10 px-2.5 py-0.5 rounded-full border border-pink-500/30">
-        🌸 ANIFLIX SAKURA VERIFIED
+        🌸 ANISAKURA STREAMING
       </span>
-      <span class="text-slate-300 hidden sm:inline">Pre-Rendered Zero-Failure Streaming Active.</span>
+      <span class="text-slate-300 hidden sm:inline">Active Video Stream Gateways Online.</span>
     </div>
 
     <div class="flex items-center gap-2">
@@ -133,10 +126,10 @@
         </div>
         <div>
           <span class="font-sakura text-2xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-rose-300 to-white font-black">
-            AniFlix<span class="text-pink-400">.Corner</span>
+            Ani<span class="text-pink-400">Sakura</span>
           </span>
           <span class="text-[10px] block font-mono text-pink-300/80 uppercase tracking-widest -mt-1 font-semibold">
-            Streaming Sanctuary
+            Anime Sanctuary
           </span>
         </div>
       </div>
@@ -148,7 +141,7 @@
           <input 
             type="text" 
             id="main-search-input" 
-            placeholder="Search thousands of animes (e.g. Solo Leveling, Bleach)..." 
+            placeholder="Search anime (e.g. Solo Leveling, Bleach, One Piece)..." 
             class="bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none w-full font-medium"
             oninput="handleSearchDebounced(this.value)"
           >
@@ -175,6 +168,9 @@
           <i class="ph-bold ph-clock-counter-clockwise text-lg text-pink-400"></i>
           <span class="hidden sm:inline">History</span>
         </button>
+
+        <!-- User Authentication Widget -->
+        <div id="user-nav-container"></div>
       </div>
 
     </div>
@@ -208,13 +204,9 @@
           </div>
 
           <span class="text-xs font-mono font-bold text-pink-400 flex items-center gap-1.5 ml-1">
-            <i class="ph-bold ph-hard-drives text-base"></i> STREAM SOURCE:
+            <i class="ph-bold ph-hard-drives text-base"></i> SERVER:
           </span>
-          <div id="server-buttons-list" class="flex items-center gap-2 flex-wrap">
-            <button onclick="switchStream(52299, 1, 0)" class="srv-btn px-3 py-1 rounded-xl text-xs font-mono font-bold bg-pink-500 text-white shadow-md">AutoEmbed (Server 1)</button>
-            <button onclick="switchStream(52299, 1, 1)" class="srv-btn px-3 py-1 rounded-xl text-xs font-mono font-bold bg-slate-900 text-slate-300 hover:text-white border border-white/10">VidSrc (Server 2)</button>
-            <button onclick="switchStream(52299, 1, 2)" class="srv-btn px-3 py-1 rounded-xl text-xs font-mono font-bold bg-slate-900 text-slate-300 hover:text-white border border-white/10">Direct MP4 (Server 3)</button>
-          </div>
+          <div id="server-buttons-list" class="flex items-center gap-2 flex-wrap"></div>
         </div>
 
         <div class="flex items-center gap-2.5 text-xs font-mono text-slate-400 flex-wrap">
@@ -229,7 +221,7 @@
         </div>
       </div>
 
-      <!-- VIDEO PLAYER CANVAS (Pre-Rendered Fallback Stage) -->
+      <!-- VIDEO PLAYER CANVAS -->
       <div class="bg-slate-950/90 border-2 border-white/10 rounded-3xl overflow-hidden shadow-2xl relative">
         <div class="relative bg-black aspect-video max-h-[620px] w-full flex items-center justify-center overflow-hidden">
           
@@ -244,17 +236,20 @@
             Your browser does not support HTML5 video playback.
           </video>
 
-          <!-- Universal Gateway Embed Iframe (Pre-loaded with Solo Leveling Ep 1) -->
+          <!-- Embed Iframe with Complete Bypass Permissions -->
           <iframe 
             id="embed-video-player" 
             class="w-full h-full border-0" 
             src="https://player.autoembed.cc/embed/anime/52299/1"
-            allowfullscreen 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+            allowfullscreen="true"
+            webkitallowfullscreen="true"
+            mozallowfullscreen="true"
+            referrerpolicy="origin"
           ></iframe>
         </div>
 
-        <!-- Series Info Header (Pre-Rendered) -->
+        <!-- Series Info Header -->
         <div class="p-6 lg:p-8 bg-slate-900/90 border-t border-white/5 space-y-5">
           <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
             
@@ -269,7 +264,7 @@
               <div class="space-y-1.5">
                 <div class="flex flex-wrap items-center gap-2">
                   <span class="px-3 py-0.5 rounded-full text-xs font-sakura font-bold bg-pink-500 text-white border border-pink-400">
-                    ANIME CORNER
+                    ANISAKURA STREAM
                   </span>
                   <span id="player-badge-type" class="px-2 py-0.5 rounded-md text-[10px] font-mono text-pink-300 bg-pink-500/10 border border-pink-500/30 font-bold">
                     SUB: EP 1
@@ -306,7 +301,7 @@
             In a world where hunters must battle deadly monsters to protect humanity, Sung Jinwoo struggles as the weakest hunter before awakening a secret quest line.
           </p>
 
-          <!-- EPISODE SELECTOR SECTION (Pre-Rendered) -->
+          <!-- EPISODE SELECTOR SECTION -->
           <div class="pt-4 border-t border-white/5 space-y-3">
             <div class="flex items-center justify-between">
               <span class="text-xs font-sakura font-bold text-white flex items-center gap-2">
@@ -316,44 +311,10 @@
                   12 Episodes Available
                 </span>
               </span>
-              <span class="text-[11px] font-mono text-slate-500">Click any episode to switch immediately</span>
+              <span class="text-[11px] font-mono text-slate-500">Click any episode to stream immediately</span>
             </div>
 
-            <div id="episodes-list-container" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5 max-h-[300px] overflow-y-auto pr-1">
-              <!-- Pre-Rendered Episodes to guarantee immediate interaction -->
-              <button onclick="playEpisode(1)" class="ep-btn p-2 rounded-xl border border-pink-400 bg-pink-500/20 text-left transition flex flex-col justify-between">
-                <span class="text-[10px] font-mono font-bold text-pink-300">EP 1</span>
-                <span class="text-xs font-semibold text-white truncate mt-1">Episode 1</span>
-              </button>
-              <button onclick="playEpisode(2)" class="ep-btn p-2 rounded-xl border border-white/10 bg-slate-950 text-left transition flex flex-col justify-between">
-                <span class="text-[10px] font-mono font-bold text-pink-300">EP 2</span>
-                <span class="text-xs font-semibold text-white truncate mt-1">Episode 2</span>
-              </button>
-              <button onclick="playEpisode(3)" class="ep-btn p-2 rounded-xl border border-white/10 bg-slate-950 text-left transition flex flex-col justify-between">
-                <span class="text-[10px] font-mono font-bold text-pink-300">EP 3</span>
-                <span class="text-xs font-semibold text-white truncate mt-1">Episode 3</span>
-              </button>
-              <button onclick="playEpisode(4)" class="ep-btn p-2 rounded-xl border border-white/10 bg-slate-950 text-left transition flex flex-col justify-between">
-                <span class="text-[10px] font-mono font-bold text-pink-300">EP 4</span>
-                <span class="text-xs font-semibold text-white truncate mt-1">Episode 4</span>
-              </button>
-              <button onclick="playEpisode(5)" class="ep-btn p-2 rounded-xl border border-white/10 bg-slate-950 text-left transition flex flex-col justify-between">
-                <span class="text-[10px] font-mono font-bold text-pink-300">EP 5</span>
-                <span class="text-xs font-semibold text-white truncate mt-1">Episode 5</span>
-              </button>
-              <button onclick="playEpisode(6)" class="ep-btn p-2 rounded-xl border border-white/10 bg-slate-950 text-left transition flex flex-col justify-between">
-                <span class="text-[10px] font-mono font-bold text-pink-300">EP 6</span>
-                <span class="text-xs font-semibold text-white truncate mt-1">Episode 6</span>
-              </button>
-              <button onclick="playEpisode(7)" class="ep-btn p-2 rounded-xl border border-white/10 bg-slate-950 text-left transition flex flex-col justify-between">
-                <span class="text-[10px] font-mono font-bold text-pink-300">EP 7</span>
-                <span class="text-xs font-semibold text-white truncate mt-1">Episode 7</span>
-              </button>
-              <button onclick="playEpisode(8)" class="ep-btn p-2 rounded-xl border border-white/10 bg-slate-950 text-left transition flex flex-col justify-between">
-                <span class="text-[10px] font-mono font-bold text-pink-300">EP 8</span>
-                <span class="text-xs font-semibold text-white truncate mt-1">Episode 8</span>
-              </button>
-            </div>
+            <div id="episodes-list-container" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5 max-h-[300px] overflow-y-auto pr-1"></div>
           </div>
 
         </div>
@@ -361,78 +322,18 @@
       </div>
     </section>
 
-    <!-- ANIME CATALOG GRID (Pre-Rendered Cards) -->
+    <!-- ANIME CATALOG GRID -->
     <section class="space-y-5">
       <div class="flex items-center justify-between border-b border-white/10 pb-4">
         <div>
           <h2 class="text-2xl font-sakura font-bold text-white flex items-center gap-2">
             <span>🌸</span> <span id="catalog-section-title">ALL AVAILABLE ANIME SERIES</span>
           </h2>
-          <p class="text-xs text-slate-400">Click any title to load all episodes and streaming mirrors</p>
+          <p class="text-xs text-slate-400">Click any series to load all episodes and streaming mirrors</p>
         </div>
       </div>
 
-      <div id="video-catalog-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        <!-- Card 1: Solo Leveling -->
-        <div onclick="loadSeries('mal-52299', 1)" class="group relative bg-slate-900/90 border border-pink-400 shadow-xl shadow-pink-500/20 rounded-2xl overflow-hidden transition duration-300 flex flex-col cursor-pointer">
-          <div class="relative aspect-[3/4] overflow-hidden bg-slate-950">
-            <img src="https://cdn.myanimelist.net/images/anime/1188/136926l.jpg" alt="Solo Leveling" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-            <span class="absolute top-2 right-2 bg-pink-500/90 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded text-white shadow-md">EP 12</span>
-          </div>
-          <div class="p-3 flex-1 flex flex-col justify-between">
-            <h3 class="text-xs font-sakura font-bold text-white line-clamp-1 group-hover:text-pink-300 transition">Solo Leveling</h3>
-            <span class="text-[10px] font-mono text-slate-400 truncate mt-1">A-1 Pictures</span>
-          </div>
-        </div>
-
-        <!-- Card 2: Frieren -->
-        <div onclick="loadSeries('mal-52034', 1)" class="group relative bg-slate-900/90 border border-white/10 hover:border-pink-400 rounded-2xl overflow-hidden transition duration-300 flex flex-col cursor-pointer">
-          <div class="relative aspect-[3/4] overflow-hidden bg-slate-950">
-            <img src="https://cdn.myanimelist.net/images/anime/1015/138075l.jpg" alt="Frieren" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-            <span class="absolute top-2 right-2 bg-pink-500/90 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded text-white shadow-md">EP 28</span>
-          </div>
-          <div class="p-3 flex-1 flex flex-col justify-between">
-            <h3 class="text-xs font-sakura font-bold text-white line-clamp-1 group-hover:text-pink-300 transition">Frieren: Beyond Journey's End</h3>
-            <span class="text-[10px] font-mono text-slate-400 truncate mt-1">Madhouse</span>
-          </div>
-        </div>
-
-        <!-- Card 3: Jujutsu Kaisen S2 -->
-        <div onclick="loadSeries('mal-51009', 1)" class="group relative bg-slate-900/90 border border-white/10 hover:border-pink-400 rounded-2xl overflow-hidden transition duration-300 flex flex-col cursor-pointer">
-          <div class="relative aspect-[3/4] overflow-hidden bg-slate-950">
-            <img src="https://cdn.myanimelist.net/images/anime/1792/138022l.jpg" alt="Jujutsu Kaisen" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-            <span class="absolute top-2 right-2 bg-pink-500/90 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded text-white shadow-md">EP 23</span>
-          </div>
-          <div class="p-3 flex-1 flex flex-col justify-between">
-            <h3 class="text-xs font-sakura font-bold text-white line-clamp-1 group-hover:text-pink-300 transition">Jujutsu Kaisen Season 2</h3>
-            <span class="text-[10px] font-mono text-slate-400 truncate mt-1">MAPPA</span>
-          </div>
-        </div>
-
-        <!-- Card 4: Demon Slayer -->
-        <div onclick="loadSeries('mal-47778', 1)" class="group relative bg-slate-900/90 border border-white/10 hover:border-pink-400 rounded-2xl overflow-hidden transition duration-300 flex flex-col cursor-pointer">
-          <div class="relative aspect-[3/4] overflow-hidden bg-slate-950">
-            <img src="https://cdn.myanimelist.net/images/anime/1286/99889l.jpg" alt="Demon Slayer" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-            <span class="absolute top-2 right-2 bg-pink-500/90 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded text-white shadow-md">EP 26</span>
-          </div>
-          <div class="p-3 flex-1 flex flex-col justify-between">
-            <h3 class="text-xs font-sakura font-bold text-white line-clamp-1 group-hover:text-pink-300 transition">Demon Slayer: Kimetsu no Yaiba</h3>
-            <span class="text-[10px] font-mono text-slate-400 truncate mt-1">ufotable</span>
-          </div>
-        </div>
-
-        <!-- Card 5: One Piece -->
-        <div onclick="loadSeries('mal-21', 1)" class="group relative bg-slate-900/90 border border-white/10 hover:border-pink-400 rounded-2xl overflow-hidden transition duration-300 flex flex-col cursor-pointer">
-          <div class="relative aspect-[3/4] overflow-hidden bg-slate-950">
-            <img src="https://cdn.myanimelist.net/images/anime/6/73245l.jpg" alt="One Piece" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-            <span class="absolute top-2 right-2 bg-pink-500/90 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded text-white shadow-md">EP 1000+</span>
-          </div>
-          <div class="p-3 flex-1 flex flex-col justify-between">
-            <h3 class="text-xs font-sakura font-bold text-white line-clamp-1 group-hover:text-pink-300 transition">One Piece</h3>
-            <span class="text-[10px] font-mono text-slate-400 truncate mt-1">Toei Animation</span>
-          </div>
-        </div>
-      </div>
+      <div id="video-catalog-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
     </section>
 
   </main>
@@ -468,8 +369,23 @@
         <h3 class="text-base font-sakura font-bold text-white">Your Watch History</h3>
         <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-white"><i class="ph-bold ph-x text-lg"></i></button>
       </div>
-      <div id="history-list-container" class="flex-1 overflow-y-auto space-y-2 text-xs">
-        <div class="text-center py-8 text-slate-400">History entries will record here automatically.</div>
+      <div id="history-list-container" class="flex-1 overflow-y-auto space-y-2 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: AUTH / LOGIN -->
+  <div id="auth-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-white/10 w-full max-w-sm rounded-3xl shadow-2xl p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <h3 class="text-base font-sakura font-bold text-white">AniSakura Account</h3>
+        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-white"><i class="ph-bold ph-x"></i></button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-400 mb-1">Nickname</label>
+          <input type="text" id="auth-username-input" placeholder="e.g. AnimeSenpai" class="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white outline-none">
+        </div>
+        <button onclick="handleAuthSubmit()" class="w-full py-2.5 rounded-xl bg-pink-500 font-bold text-white hover:bg-pink-400 transition">Save & Sign In</button>
       </div>
     </div>
   </div>
@@ -482,7 +398,7 @@
 
   <script>
     // ==========================================================
-    // 1. DATA SEEDING & PRE-LOADED STATE
+    // 1. ANIME SEED CATALOG
     // ==========================================================
     let catalog = [
       {
@@ -528,7 +444,7 @@
         author: 'Toei Animation',
         coverPhoto: 'https://cdn.myanimelist.net/images/anime/6/73245l.jpg',
         desc: 'Monkey D. Luffy sets sail with his eccentric crew to find the legendary treasure known as the One Piece.',
-        totalEps: 1000
+        totalEps: 1100
       }
     ];
 
@@ -542,7 +458,7 @@
     const embedIframe = document.getElementById('embed-video-player');
 
     // ==========================================================
-    // 2. MULTI-SERVER EPISODE EMBED ROUTING
+    // 2. UNIVERSAL EMBED STREAM GATEWAYS
     // ==========================================================
     function getEpisodeServers(malId, epNum) {
       const isDub = (currentAudioMode === 'DUB');
@@ -558,7 +474,12 @@
           type: 'embed' 
         },
         { 
-          name: 'Direct Stream (Server 3)', 
+          name: '2Embed (Server 3)', 
+          url: `https://2embed.cc/embed/anime/${malId}/${epNum}`, 
+          type: 'embed' 
+        },
+        { 
+          name: 'Direct Stream (Backup)', 
           url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', 
           type: 'video' 
         }
@@ -617,7 +538,6 @@
       document.getElementById('player-active-episode-title').textContent = `Now Playing: Episode ${epNum}`;
       document.getElementById('player-badge-type').textContent = `${currentAudioMode}: EP ${epNum}`;
 
-      // Update active highlight on episode buttons
       document.querySelectorAll('#episodes-list-container .ep-btn').forEach((btn, idx) => {
         if (idx + 1 === epNum) {
           btn.className = 'ep-btn p-2 rounded-xl border text-left transition flex flex-col justify-between bg-pink-500/20 border-pink-400 shadow-md shadow-pink-500/20';
@@ -687,7 +607,7 @@
     }
 
     // ==========================================================
-    // 3. JIKAN REST API V4 (CACHED SEARCH & AUTO-DISCOVERY)
+    // 3. JIKAN V4 API SEARCH (CACHED TO AVOID HTTP 429)
     // ==========================================================
     let searchTimer = null;
     const searchCache = {};
@@ -703,7 +623,6 @@
 
       spinner.classList.remove('hidden');
 
-      // Check cache to avoid hitting Jikan API rate limit (HTTP 429)
       if (searchCache[query]) {
         renderCatalog(searchCache[query]);
         spinner.classList.add('hidden');
@@ -714,7 +633,7 @@
         try {
           const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=12`);
           if (res.status === 429) {
-            showToast("Rate limit reached: using local results");
+            showToast("Rate limit reached: showing local results");
             filterLocal(query);
             return;
           }
@@ -733,7 +652,6 @@
 
             searchCache[query] = results;
 
-            // Merge search results into the master catalog
             results.forEach(r => {
               if (!catalog.find(c => c.id === r.id)) catalog.push(r);
             });
@@ -784,6 +702,81 @@
         `;
         container.appendChild(card);
       });
+    }
+
+    // ==========================================================
+    // 5. USER AUTH & MODALS
+    // ==========================================================
+    let currentUser = null;
+
+    function initUserSession() {
+      const stored = localStorage.getItem('anisakura_user');
+      if (stored) {
+        try { currentUser = JSON.parse(stored); } catch(e) {}
+      }
+      updateAuthUI();
+    }
+
+    function updateAuthUI() {
+      const container = document.getElementById('user-nav-container');
+      if (!container) return;
+
+      if (currentUser && currentUser.username) {
+        const firstLetter = currentUser.username.charAt(0).toUpperCase();
+        container.innerHTML = `
+          <div class="flex items-center gap-2 bg-slate-900 border border-white/10 px-2.5 py-1.5 rounded-xl">
+            <div class="w-6 h-6 rounded-lg bg-pink-500 text-white font-bold flex items-center justify-center text-xs">
+              ${firstLetter}
+            </div>
+            <span class="text-xs font-mono text-pink-300 font-bold hidden sm:inline max-w-[90px] truncate">
+              ${currentUser.username}
+            </span>
+            <button onclick="logoutUser()" title="Sign Out" class="text-slate-400 hover:text-rose-400 text-sm ml-1">
+              <i class="ph-bold ph-sign-out"></i>
+            </button>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <button 
+            onclick="openAuthModal()" 
+            class="px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-pink-300 hover:text-white hover:bg-slate-800 transition shadow-sm text-xs font-mono font-bold flex items-center gap-1.5"
+          >
+            <i class="ph-bold ph-user-circle text-base"></i>
+            <span>Sign In</span>
+          </button>
+        `;
+      }
+    }
+
+    function openAuthModal() {
+      document.getElementById('auth-modal').classList.remove('hidden');
+      document.getElementById('auth-modal').classList.add('flex');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('auth-modal').classList.add('hidden');
+      document.getElementById('auth-modal').classList.remove('flex');
+    }
+
+    function handleAuthSubmit() {
+      const username = document.getElementById('auth-username-input').value.trim();
+      if (!username) {
+        showToast("Please enter a nickname!");
+        return;
+      }
+      currentUser = { username };
+      localStorage.setItem('anisakura_user', JSON.stringify(currentUser));
+      updateAuthUI();
+      closeAuthModal();
+      showToast(`🌸 Welcome to AniSakura, ${username}!`);
+    }
+
+    function logoutUser() {
+      localStorage.removeItem('anisakura_user');
+      currentUser = null;
+      updateAuthUI();
+      showToast("Signed out.");
     }
 
     function toggleOledMode() {
@@ -843,7 +836,7 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Background Sakura Canvas Animation
+    // Sakura Canvas Animation
     const canvas = document.getElementById('sakura-canvas');
     const ctx = canvas.getContext('2d');
     let petals = [];
@@ -883,6 +876,7 @@
     anim();
 
     window.onload = function() {
+      initUserSession();
       renderCatalog();
       loadSeries('mal-52299', 1);
     };
